@@ -142,3 +142,11 @@ def setup_nvidia(primary_gpu: bool = False):
 
 if __name__ == "__main__":
     setup_nvidia()
+
+
+def nvidia_payload() -> bool:
+    """
+    Returns True if Nvidia GPU is installed
+    """
+    setup_nvidia()
+    return True
