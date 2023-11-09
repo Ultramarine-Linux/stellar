@@ -82,32 +82,30 @@ def get_nvidia_packages() -> list[str]:
     Returns a list of Nvidia packages to install
     """
 
-    pkgs = ["nvidia-gpu-firmware","libva-nvidia-driver"]
+    pkgs = ["nvidia-gpu-firmware", "libva-nvidia-driver"]
     chipset = get_nvidia_chipset()
     ver = get_nvidia_driver(chipset)
 
     if ver == "unsupported":
         print("WARN: Unsupported NVIDIA GPU detected, keeping nouveau drivers")
         return pkgs
-    
+
     if ver == "latest":
-        pkgs.extend([
-            "akmod-nvidia",
-            "xorg-x11-drv-nvidia",
-            "xorg-x11-drv-nvidia-cuda"
-        ])
+        pkgs.extend(["akmod-nvidia", "xorg-x11-drv-nvidia", "xorg-x11-drv-nvidia-cuda"])
         return pkgs
-    
+
     else:
-        pkgs.extend([
-            f"akmod-nvidia-{ver}",
-            f"xorg-x11-drv-nvidia-{ver}",
-            f"xorg-x11-drv-nvidia-{ver}-cuda"
-        ])
+        pkgs.extend(
+            [
+                f"akmod-nvidia-{ver}",
+                f"xorg-x11-drv-nvidia-{ver}",
+                f"xorg-x11-drv-nvidia-{ver}-cuda",
+            ]
+        )
         return pkgs
 
 
-def setup_nvidia():
+def setup_nvidia(primary_gpu: bool = False):
     # Set up NVIDIA drivers, if applicable
 
     # Check if an internet connection is available
@@ -119,17 +117,28 @@ def setup_nvidia():
     if not check_nvidia_gpu():
         print("No Nvidia GPU detected, skipping Nvidia driver setup")
         return
-    
+
     pkgs = get_nvidia_packages()
 
     print(f"Installing Nvidia packages: {pkgs}")
 
-    args = ["sudo", "dnf", "install", "-y" , "--allowerasing" , "--best"]
+    args = ["sudo", "dnf", "install", "-y", "--allowerasing", "--best"]
     args.extend(pkgs)
 
     print(f"Running command: {args}")
 
     subprocess.run(args)
+
+    if primary_gpu:
+        print("Setting Nvidia GPU as primary GPU")
+        subprocess.Popen(
+            """
+            sudo cp -p /usr/share/X11/xorg.conf.d/nvidia.conf /etc/X11/xorg.conf.d/nvidia.conf
+            sudo sed -i '10i\        Option "PrimaryGPU" "yes"' /etc/X11/xorg.conf.d/nvidia.conf
+            """,
+            shell=True,
+        )
+
 
 if __name__ == "__main__":
     setup_nvidia()
