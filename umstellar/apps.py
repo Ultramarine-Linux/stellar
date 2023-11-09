@@ -13,6 +13,7 @@ gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 from gi.repository import Gtk, Adw, Gio
 
+
 class Script:
     def __init__(self, script):
         self.script = script
@@ -92,18 +93,122 @@ apps = {
         payload=Payload(
             Script(
                 """
-    echo "Installing Steam"
-    echo "option=$STELLAR_OPTION"
-    sudo dnf install -y steam
-"""
+                echo "Installing Steam"
+                echo "option=$STELLAR_OPTION"
+                sudo dnf install -y steam
+                """
             ),
         ),
         option=Option(description="Don't start with dedicated GPU (Optimus patch)"),
     ),
+    "chrome": App(
+        name="Google Chrome",
+        description="The Google Chrome web browser",
+        payload=Payload(
+            Script(
+                """
+                echo "Installing Google Chrome"
+                cat <<EOF | sudo tee /etc/yum.repos.d/google-chrome.repo
+                [google-chrome]
+                name=google-chrome
+                baseurl=http://dl.google.com/linux/chrome/rpm/stable/$basearch
+                enabled=1
+                gpgcheck=1
+                gpgkey=https://dl-ssl.google.com/linux/linux_signing_key.pub
+                EOF
+                dnf install -y google-chrome-stable || true
+                """
+            )
+        ),
+    ),
+    "vscode": App(
+        name="Visual Studio Code",
+        description="The Visual Studio Code editor",
+        payload=Payload(
+            Script(
+                """
+                sudo rpm --import https://packages.microsoft.com/keys/microsoft.asc
+                sudo sh -c 'echo -e "[code]\nname=Visual Studio Code\nbaseurl=https://packages.microsoft.com/yumrepos/vscode\nenabled=1\ngpgcheck=1\ngpgkey=https://packages.microsoft.com/keys/microsoft.asc" > /etc/yum.repos.d/vscode.repo'
+                sudo dnf install -y code
+                """
+            )
+        ),
+    ),
+    "tailscale": App(
+        name="Tailscale",
+        description="The Tailscale VPN",
+        payload=Payload(
+            Script(
+                """
+                sudo dnf config-manager --add-repo https://pkgs.tailscale.com/stable/fedora/tailscale.repo
+                sudo dnf install -y tailscale
+                sudo systemctl enable tailscaled
+                """
+            )
+        ),
+    ),
+    "msedge": App(
+        name="Microsoft Edge",
+        description="Microsoft Edge web browser",
+        payload=Payload(
+            Script(
+                """
+                sudo rpm --import https://packages.microsoft.com/keys/microsoft.asc
+                sudo dnf config-manager --add-repo https://packages.microsoft.com/yumrepos/edge
+                sudo dnf install -y microsoft-edge-stable
+                """
+            )
+        ),
+    ),
+    "docker": App(
+        name="Docker (Moby Engine)",
+        description="Docker container engine",
+        payload=Payload(
+            Script(
+                """
+                sudo dnf install -y moby-engine moby-compose moby-buildx
+                sudo systemctl enable docker.socket
+                """
+            )
+        ),
+    ),
+    "bottles": App(
+        name="Bottles",
+        description="Windows compatibility layer",
+        payload=Payload(
+            Script(
+                """
+                flatpak install -y flathub com.usebottles.bottles || true
+                """
+            )
+        ),
+    ),
+    "sandbox-tools": App(
+        name="Sandboxing Tools",
+        description="Tools for sandboxing applications, such as Toolbx and Distrobox",
+        payload=Payload(
+            Script(
+                """
+                sudo dnf install -y toolbox distrobox
+                """
+            )
+        ),
+    ),
+    "fish": App(
+        name="Fish",
+        description="Fish shell",
+        payload=Payload(
+            Script(
+                """
+                sudo dnf install -y fish
+                """
+            )
+        ),
+    ),
 }
 
 
-def main():
+def test():
     # test: try to install steam
     apps["steam"].option.set(True)
     apps["steam"].execute()
@@ -122,7 +227,6 @@ class AppEntry(Adw.ActionRow):
 
         # add tickbox to the right
         self.tickbox = Gtk.CheckButton()
-        
 
         # add as suffix
         self.add_prefix(self.tickbox)
@@ -146,9 +250,6 @@ class AppEntry(Adw.ActionRow):
             self.optionbox.append(desc_label)
             self.optionbox.append(self.option_toggle)
             self.add_suffix(self.optionbox)
-            
-            
-
 
     def on_activate(self, action_row):
         print(f"Activating {self.app.name}")

@@ -1,3 +1,4 @@
+from time import sleep
 import gi
 from . import apps
 
@@ -11,13 +12,53 @@ class MainWindow(Gtk.ApplicationWindow):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # Things will go here
-        self.set_titlebar(Adw.HeaderBar())
+        title = Adw.WindowTitle()
+        title.set_title("Set up your system")
+        self.header_bar = Adw.HeaderBar()
+        print(self.header_bar.get_decoration_layout())
+        # do not show window controls
+        self.header_bar.set_title_widget(title)
+        self.header_bar.set_show_end_title_buttons(False)
+        # don't allow resizing
+        self.set_resizable(False)
+        # don't add controls to headerbar
+        # self.header_bar.set_show_close_button(False)
+        install_button = Gtk.Button(
+            label="Install",
+        )
+        install_button.add_css_class("suggested-action")
+
+        install_button.connect("clicked", self.install)
+
+        skip_button = Gtk.Button(
+            label="Skip",
+        )
+        skip_button.add_css_class("destructive-action")
+
+        skip_button.connect("clicked", self.skip)
+
+        self.header_bar.pack_start(
+            skip_button,
+        )
+
+        # add button to headerbar (on the end)
+        self.header_bar.pack_end(
+            install_button,
+        )
+
+        self.set_titlebar(self.header_bar)
+        self.scrolled = Gtk.ScrolledWindow()
+        self.scrolled.set_size_request(800, 600)
         self.set_title("Set up your system")
         self.set_default_size(800, 600)
+        # force max box size to be 800x600
+
         self.box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
-        self.set_child(self.box)
+        # self.box.set_size_request(800, 600)
+        self.box.set_vexpand(False)
+        self.box.set_hexpand(False)
+        self.set_child(self.scrolled)
         # force size of box1 to be 800x600
-        self.box.set_size_request(800, 600)
         # dont allow resizing
         self.set_resizable(False)
 
@@ -70,7 +111,7 @@ class MainWindow(Gtk.ApplicationWindow):
 
         # listbox.append(row2)
 
-        self.app_list = []
+        self.app_list = {}
 
         for id, app in apps.apps.items():
             row = apps.AppEntry(app, id)
@@ -93,6 +134,7 @@ class MainWindow(Gtk.ApplicationWindow):
         listbox2.add_css_class("boxed-list")
 
         self.box.append(content_box)
+        self.scrolled.set_child(self.box)
 
     def on_app_toggled(self, checkbtn, **kwargs):
         print("toggled")
@@ -102,10 +144,10 @@ class MainWindow(Gtk.ApplicationWindow):
         print(parent)
         if act:
             # set key of id in app_list to app
-            self.app_list.append({parent.appid: parent.app})
+            self.app_list.update({parent.appid: parent.app})
         else:
             # remove key from app_list
-            self.app_list.remove({parent.appid: parent.app})
+            self.app_list.pop(parent.appid)
 
         print(self.app_list)
 
@@ -127,6 +169,32 @@ class MainWindow(Gtk.ApplicationWindow):
         # update option toggle sensitivity, or something
 
         parent.optionbox.hide()
+
+    def install(self, button):
+        # install all apps in app_list
+        self.hide()
+        print("installing")
+        # print(button)
+        # hide window
+        print(self.app_list)
+
+        for id, app in self.app_list.items():
+            print(id, app)
+            # execute app
+            # run execute in separate thread
+            app.execute()
+            
+            sleep(1)
+        # only exit when the for loop is done
+        self.destroy()
+
+
+    def skip(self, button):
+        # exit
+        print("exiting")
+        print(button)
+        self.destroy()
+        pass
 
 
 class App(Adw.Application):
