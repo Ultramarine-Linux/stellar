@@ -2,6 +2,7 @@
 
 import subprocess
 import requests
+from . import util
 
 nvidia_prefixes = {
     # List of chipset prefixes with its corresponding last supported driver version
@@ -127,16 +128,15 @@ def setup_nvidia(primary_gpu: bool = False):
 
     print(f"Running command: {args}")
 
-    subprocess.run(args)
+    util.execute(" ".join(args))
 
     if primary_gpu:
         print("Setting Nvidia GPU as primary GPU")
-        subprocess.Popen(
+        util.execute(
             """
             sudo cp -p /usr/share/X11/xorg.conf.d/nvidia.conf /etc/X11/xorg.conf.d/nvidia.conf
             sudo sed -i '10i\        Option "PrimaryGPU" "yes"' /etc/X11/xorg.conf.d/nvidia.conf
             """,
-            shell=True,
         )
 
 

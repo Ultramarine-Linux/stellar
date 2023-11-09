@@ -10,6 +10,22 @@ So, Ultramarine 39 is supposed to have a script that detects NVIDIA GPUs and ins
 
 This script should be deprecated in the future when we finally implement our own installer (Readymade), but for now. This is already a huge improvement over all the other Fedora-based distros that don't even have a post-install menu. (looking at you, Nobara, and you, UBlue)
 
+## Running
+
+To test Stellar, you'll need the following
+
+- Python 3.11 (or newer)
+- GTK 4.4 (or newer)
+- libadwaita 1.0 (or newer)
+
+And optionally, a chroot of Ultramarine Linux 39. You can use the following command to run Stellar:
+
+```sh
+export STELLAR_CHROOT=/path/to/chroot
+python3 -m umstellar
+```
+
+
 ## Naming
 
 Stellar is named after Hoshimachi Suisei's hit track, [Stellar Stellar]. It's honestly a banger and you should listen to it.

@@ -12,6 +12,7 @@ gi.require_version("Gtk", "4.0")
 # libadwaita
 gi.require_version("Adw", "1")
 from gi.repository import Gtk, Adw, Gio
+from . import util
 
 
 class Script:
@@ -19,7 +20,7 @@ class Script:
         self.script = script
 
     def process(self):
-        subprocess.run(self.script, shell=True)
+        util.execute(self.script)
 
 
 class Payload:
