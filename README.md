@@ -25,7 +25,6 @@ export STELLAR_CHROOT=/path/to/chroot
 python3 -m umstellar
 ```
 
-
 ## Naming
 
 Stellar is named after Hoshimachi Suisei's hit track, [Stellar Stellar]. It's honestly a banger and you should listen to it.
