@@ -1,11 +1,13 @@
-from time import sleep
 import gi
 from . import apps
+from gi.repository import Gtk, Adw, GObject, GLib
 
 gi.require_version("Gtk", "4.0")
 # libadwaita
 gi.require_version("Adw", "1")
-from gi.repository import Gtk, Adw, Gio
+
+global app_list
+app_list = {}
 
 
 class MainWindow(Gtk.ApplicationWindow):
@@ -97,22 +99,6 @@ class MainWindow(Gtk.ApplicationWindow):
         listbox.set_selection_mode(Gtk.SelectionMode.NONE)
         listbox.add_css_class("boxed-list")
 
-        # test action rows
-
-        # row1 = Adw.ActionRow()
-        # row1.set_title("NVIDIA Drivers")
-        # row1.set_subtitle("Install NVIDIA drivers")
-
-        # row2 = Adw.ActionRow()
-        # row2.set_title("Steam")
-        # row2.set_subtitle("The Steam gaming platform")
-
-        # listbox.append(row1)
-
-        # listbox.append(row2)
-
-        self.app_list = {}
-
         for id, app in apps.apps.items():
             row = apps.AppEntry(app, id)
 
@@ -144,12 +130,12 @@ class MainWindow(Gtk.ApplicationWindow):
         print(parent)
         if act:
             # set key of id in app_list to app
-            self.app_list.update({parent.appid: parent.app})
+            app_list.update({parent.appid: parent.app})
         else:
             # remove key from app_list
-            self.app_list.pop(parent.appid)
+            app_list.pop(parent.appid)
 
-        print(self.app_list)
+        print(app_list)
 
     def on_option_toggled(self, checkbtn, **kwargs):
         print("toggled")
@@ -159,42 +145,31 @@ class MainWindow(Gtk.ApplicationWindow):
         print(parent)
         if act:
             # set key of id in app_list to app
-            self.app_list.append({parent.appid: parent.app})
+            app_list.append({parent.appid: parent.app})
             parent.optionbox.show()
         else:
             # remove key from app_list
-            self.app_list.remove({parent.appid: parent.app})
+            app_list.remove({parent.appid: parent.app})
 
-        print(self.app_list)
+        print(app_list)
         # update option toggle sensitivity, or something
 
         parent.optionbox.hide()
 
+    def close_window(self):
+        self.close()
+        return
+
     def install(self, button):
-        # install all apps in app_list
-        self.hide()
-        print("installing")
-        # print(button)
-        # hide window
-        print(self.app_list)
-
-        for id, app in self.app_list.items():
-            print(id, app)
-            # execute app
-            # run execute in separate thread
-            app.execute()
-            
-            sleep(1)
-        # only exit when the for loop is done
+        self.close_window()
+        print(app_list)
         self.destroy()
-
 
     def skip(self, button):
         # exit
         print("exiting")
         print(button)
-        self.destroy()
-        pass
+        exit(0)
 
 
 class App(Adw.Application):
@@ -210,6 +185,9 @@ class App(Adw.Application):
 def main():
     app = App()
     app.run()
+
+    for app in app_list.values():
+        app.execute()
 
 
 if __name__ == "__main__":

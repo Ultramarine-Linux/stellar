@@ -1,6 +1,7 @@
 import os
 import subprocess
-
+import threading
+# from gi.repository import Gtk, GObject
 # Run payload in either the a chroot as a temporary script, or run directly on the host
 
 def execute(payload: str):
@@ -35,8 +36,6 @@ def execute(payload: str):
 
         # remove the temporary file
         os.remove(tmpfile)
-        return p
-
         
 
     else:
