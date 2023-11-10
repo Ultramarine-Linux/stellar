@@ -1,5 +1,6 @@
 # GPU detection and driver versioning module
-
+from . import log
+import logging
 import os
 import subprocess
 import requests
@@ -107,6 +108,40 @@ def get_nvidia_packages() -> list[str]:
         return pkgs
 
 
+def check_ostree() -> bool:
+    """
+    Check whether the system is running on OSTree, or a normal RPM-based system
+
+    Returns True if OSTree is detected
+    """
+    return os.path.exists("/ostree")
+
+
+def setup_nvidia_ostree():
+    # Set up Nvidia drivers while on RPM-OSTree
+    pkgs = get_nvidia_packages()
+
+    print(f"Installing Nvidia packages: {pkgs}")
+
+    args = ["rpm-ostree", "install", "-y"]
+
+    args.extend(pkgs)
+
+    command = " ".join(args)
+
+    logging.info(f"Running command: {command}")
+
+    util.execute(command)
+
+    logging.info("Setting up OSTree kernel arguments")
+
+    util.execute(
+        "sudo rpm-ostree kargs --append=rd.driver.blacklist=nouveau --append=modprobe.blacklist=nouveau --append=nvidia-drm.modeset=1 initcall_blacklist=simpledrm_platform_driver_init"
+    )
+
+    logging.info("Complete! Please reboot to apply changes.")
+
+
 def setup_nvidia(primary_gpu: bool = False):
     # Set to True anyway if STELLAR_OPTION is set to 1
     if os.environ["STELLAR_OPTION"] == "1":
@@ -121,6 +156,11 @@ def setup_nvidia(primary_gpu: bool = False):
 
     if not check_nvidia_gpu():
         print("No Nvidia GPU detected, skipping Nvidia driver setup")
+        return
+
+    if check_ostree():
+        print("OSTree detected, doing alternate Nvidia driver setup")
+        setup_nvidia_ostree()
         return
 
     pkgs = get_nvidia_packages()
