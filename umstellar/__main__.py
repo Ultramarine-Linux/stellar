@@ -35,7 +35,7 @@ class MainWindow(Gtk.ApplicationWindow):
         skip_button = Gtk.Button(
             label="Skip",
         )
-        skip_button.add_css_class("destructive-action")
+        # skip_button.add_css_class("destructive-action")
 
         skip_button.connect("clicked", self.skip)
 

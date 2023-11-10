@@ -1,5 +1,6 @@
 # GPU detection and driver versioning module
 
+import os
 import subprocess
 import requests
 from . import util
@@ -107,6 +108,9 @@ def get_nvidia_packages() -> list[str]:
 
 
 def setup_nvidia(primary_gpu: bool = False):
+    # Set to True anyway if STELLAR_OPTION is set to 1
+    if os.environ["STELLAR_OPTION"] == "1":
+        primary_gpu = True
     # Set up NVIDIA drivers, if applicable
 
     # Check if an internet connection is available
