@@ -118,6 +118,10 @@ apps = {
                 echo "Installing Steam"
                 echo "option=$STELLAR_OPTION"
                 sudo dnf install -y steam
+                if [ "$STELLAR_OPTION" = "1" ]; then
+                    sed -i '/PrefersNonDefaultGPU/d' /usr/share/steam/steam.desktop
+                    sed -i '/X-KDE-RunOnDiscreteGpu/d' /usr/share/steam/steam.desktop
+                fi
                 """
             ),
         ),
