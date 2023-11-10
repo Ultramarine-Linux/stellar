@@ -1,6 +1,10 @@
 import gi
+import sys
+import logging
 from . import apps
 from gi.repository import Gtk, Adw, GObject, GLib
+from . import log
+
 
 gi.require_version("Gtk", "4.0")
 # libadwaita
@@ -10,6 +14,7 @@ global app_list
 app_list = {}
 
 
+
 class MainWindow(Gtk.ApplicationWindow):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -17,7 +22,7 @@ class MainWindow(Gtk.ApplicationWindow):
         title = Adw.WindowTitle()
         title.set_title("Set up your system")
         self.header_bar = Adw.HeaderBar()
-        print(self.header_bar.get_decoration_layout())
+        logging.debug(self.header_bar.get_decoration_layout())
         # do not show window controls
         self.header_bar.set_title_widget(title)
         self.header_bar.set_show_end_title_buttons(False)
@@ -25,12 +30,13 @@ class MainWindow(Gtk.ApplicationWindow):
         self.set_resizable(False)
         # don't add controls to headerbar
         # self.header_bar.set_show_close_button(False)
-        install_button = Gtk.Button(
+        self.install_button = Gtk.Button(
             label="Install",
         )
-        install_button.add_css_class("suggested-action")
+        self.install_button.add_css_class("suggested-action")
+        self.install_button.set_sensitive(False)
 
-        install_button.connect("clicked", self.install)
+        self.install_button.connect("clicked", self.install)
 
         skip_button = Gtk.Button(
             label="Skip",
@@ -45,7 +51,7 @@ class MainWindow(Gtk.ApplicationWindow):
 
         # add button to headerbar (on the end)
         self.header_bar.pack_end(
-            install_button,
+            self.install_button,
         )
 
         self.set_titlebar(self.header_bar)
@@ -107,6 +113,8 @@ class MainWindow(Gtk.ApplicationWindow):
 
             row.tickbox.connect("toggled", self.on_app_toggled)
 
+            row.option_toggle.connect("toggled", self.on_rowoption_toggled)
+
             listbox.append(row)
 
         content_box.append(listbox)
@@ -123,11 +131,11 @@ class MainWindow(Gtk.ApplicationWindow):
         self.scrolled.set_child(self.box)
 
     def on_app_toggled(self, checkbtn, **kwargs):
-        print("toggled")
+        logging.debug("toggled")
         act = checkbtn.get_active()
 
         parent = checkbtn.get_parent().get_parent().get_parent()
-        print(parent)
+        logging.debug(parent)
         if act:
             # set key of id in app_list to app
             app_list.update({parent.appid: parent.app})
@@ -135,14 +143,18 @@ class MainWindow(Gtk.ApplicationWindow):
             # remove key from app_list
             app_list.pop(parent.appid)
 
-        print(app_list)
+        logging.debug(app_list)
+        if app_list:
+            self.install_button.set_sensitive(True)
+        else:
+            self.install_button.set_sensitive(False)
 
     def on_option_toggled(self, checkbtn, **kwargs):
-        print("toggled")
+        logging.debug("toggled")
         act = checkbtn.get_active()
 
         parent = checkbtn.get_parent().get_parent().get_parent()
-        print(parent)
+        logging.debug(parent)
         if act:
             # set key of id in app_list to app
             app_list.append({parent.appid: parent.app})
@@ -151,7 +163,7 @@ class MainWindow(Gtk.ApplicationWindow):
             # remove key from app_list
             app_list.remove({parent.appid: parent.app})
 
-        print(app_list)
+        logging.debug(app_list)
         # update option toggle sensitivity, or something
 
         parent.optionbox.hide()
@@ -162,15 +174,27 @@ class MainWindow(Gtk.ApplicationWindow):
 
     def install(self, button):
         self.close_window()
-        print(app_list)
+        logging.debug(app_list)
         self.destroy()
 
     def skip(self, button):
         # exit
-        print("exiting")
-        print(button)
+        logging.debug("exiting")
+        logging.debug(button)
         exit(0)
 
+    def on_rowoption_toggled(self, checkbtn, **kwargs):
+        act = checkbtn.get_active()
+        parent = checkbtn.get_parent().get_parent().get_parent().get_parent()
+
+        if act:
+            if parent.appid in app_list:
+                app_list[parent.appid].option.set(act)
+        else:
+            if parent.appid in app_list:
+                app_list[parent.appid].option.set(act)
+
+        logging.debug(app_list)
 
 class App(Adw.Application):
     def __init__(self, **kwargs):

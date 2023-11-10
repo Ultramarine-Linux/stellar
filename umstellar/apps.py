@@ -1,18 +1,16 @@
 # List of apps/presets to be installed
 
 import os
-from . import gpu
 import subprocess
-
-
+import logging
+from . import log
 import gi
-from . import apps
+from . import gpu, util
 
 gi.require_version("Gtk", "4.0")
 # libadwaita
 gi.require_version("Adw", "1")
 from gi.repository import Gtk, Adw, Gio
-from . import util
 
 
 class Script:
@@ -29,14 +27,14 @@ class Payload:
         self.payload = payload
 
     def result(self):
-        print(self.payload)
+        logging.debug(self.payload)
         if isinstance(self.payload, Script):
             self.payload.process()
         else:
-            print("Payload is not a script")
+            logging.debug("Payload is not a script")
             # check if payload is a function
             if callable(self.payload):
-                print("Payload is a function")
+                logging.debug("Payload is a function")
                 # Execute lambda function inside and return the result
                 return self.payload()
 
@@ -59,22 +57,44 @@ class Option:
             os.environ["STELLAR_OPTION"] = "1"
         else:
             os.environ["STELLAR_OPTION"] = "0"
+            
+    def __repr__(self):
+        return f"Option(description={self.description}, option={self.option})"
+
 
 
 class App:
     def __init__(
-        self, name: str, description: str, payload: Payload, option: Option = None
+        self,
+        name: str,
+        description: str,
+        payload: Payload,
+        option: Option = None,
+        category: str = None,
     ):
         self.name = name
         self.description = description
         self.payload = payload
         self.option = option
+        self.category = category
 
-        print(f"App {self.name} created")
-        print(payload)
+        logging.debug(f"App {self.name} created")
+        logging.debug(self.payload)
 
     def __repr__(self):
-        return f"<App {self.name}>"
+        return f"App(name={self.name}, description={self.description}, payload={self.payload}, option={self.option}, category={self.category})"
+
+    def to_dict(self):
+        return {
+            "name": self.name,
+            "description": self.description,
+            "payload": self.payload,
+            "option": {
+                "description": self.option.description,
+                "option": self.option.option
+            } if self.option else None,
+            "category": self.category
+        }
 
     def execute(self):
         self.payload.result()
@@ -87,6 +107,7 @@ apps = {
         # Define payload, but don't run it yet
         payload=Payload(gpu.setup_nvidia),
         option=Option(description="Set NVIDIA GPU as primary GPU"),
+        category="drivers",
     ),
     "steam": App(
         name="Steam",
@@ -101,6 +122,7 @@ apps = {
             ),
         ),
         option=Option(description="Don't start with dedicated GPU (Optimus patch)"),
+        category="apps",
     ),
     "chrome": App(
         name="Google Chrome",
@@ -121,6 +143,7 @@ EOF
                 """
             )
         ),
+        category="apps",
     ),
     "vscode": App(
         name="Visual Studio Code",
@@ -134,6 +157,7 @@ EOF
                 """
             )
         ),
+        category="apps",
     ),
     "tailscale": App(
         name="Tailscale",
@@ -147,6 +171,7 @@ EOF
                 """
             )
         ),
+        category="apps",
     ),
     "msedge": App(
         name="Microsoft Edge",
@@ -160,6 +185,7 @@ EOF
                 """
             )
         ),
+        category="apps",
     ),
     "docker": App(
         name="Docker (Moby Engine)",
@@ -172,6 +198,7 @@ EOF
                 """
             )
         ),
+        category="apps",
     ),
     "bottles": App(
         name="Bottles",
@@ -183,6 +210,7 @@ EOF
                 """
             )
         ),
+        category="apps",
     ),
     "sandbox-tools": App(
         name="Sandboxing Tools",
@@ -194,6 +222,7 @@ EOF
                 """
             )
         ),
+        category="apps",
     ),
     "fish": App(
         name="Fish",
@@ -205,6 +234,7 @@ EOF
                 """
             )
         ),
+        category="apps",
     ),
 }
 
@@ -228,6 +258,7 @@ class AppEntry(Adw.ActionRow):
 
         # add tickbox to the right
         self.tickbox = Gtk.CheckButton()
+        self.tickbox.connect("toggled", self.on_tickbox_toggled)
 
         # add as suffix
         self.add_prefix(self.tickbox)
@@ -235,12 +266,16 @@ class AppEntry(Adw.ActionRow):
         # Prefix, for the feature flags
         self.option_toggle = Gtk.CheckButton()
         # set sensitive to whatever the tickbox status is by connecting it
+        if app.option is not None:
+            self.option_toggle.set_sensitive(app.option.option)
+            self.option_toggle.set_active(app.option.option)
+        else:
+            self.option_toggle.set_sensitive(False)
 
-        # Ideally, we should use a popover for the option toggle,
-        # but I don't know how to do that yet
         if app.option:
-            # add option toggle as suffix
+            self.option_toggle.set_active(app.option.option)
 
+            # add option toggle as suffix
             self.optionbox = Gtk.Box()
             # make it horizontal
             self.optionbox.set_orientation(Gtk.Orientation.HORIZONTAL)
@@ -252,6 +287,8 @@ class AppEntry(Adw.ActionRow):
             self.optionbox.append(self.option_toggle)
             self.add_suffix(self.optionbox)
 
-    def on_activate(self, action_row):
-        print(f"Activating {self.app.name}")
-        pass
+    def on_activate(self, _):
+        logging.debug(f"Activating {self.app.name}")
+
+    def on_tickbox_toggled(self, tickbox):
+        self.option_toggle.set_sensitive(tickbox.get_active())
