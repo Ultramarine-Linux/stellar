@@ -3,9 +3,9 @@
 import os
 import subprocess
 import logging
-from . import log
+from . import driver, log
 import gi
-from . import gpu, util
+from . import util
 
 gi.require_version("Gtk", "4.0")
 # libadwaita
@@ -105,7 +105,7 @@ apps = {
         name="NVIDIA Drivers",
         description="Install NVIDIA drivers",
         # Define payload, but don't run it yet
-        payload=Payload(gpu.setup_nvidia),
+        payload=Payload(driver.setup_nvidia),
         option=Option(description="Set NVIDIA GPU as primary GPU"),
         category="drivers",
     ),
@@ -240,6 +240,24 @@ EOF
         ),
         category="apps",
     ),
+    "1password": App(
+        name="1Password",
+        description="1Password password manager",
+        option=Option(description="Also install 1Password CLI"),
+        payload=Payload(
+            Script(
+                """
+                rpm --import https://downloads.1password.com/linux/keys/1password.asc
+                sh -c 'echo -e "[1password]\nname=1Password Stable Channel\nbaseurl=https://downloads.1password.com/linux/rpm/stable/\$basearch\nenabled=1\ngpgcheck=1\nrepo_gpgcheck=1\ngpgkey=\"https://downloads.1password.com/linux/keys/1password.asc\"" > /etc/yum.repos.d/1password.repo'
+                sudo dnf install -y 1password
+
+                if [ "$STELLAR_OPTION" = "1" ]; then
+                    sudo dnf install -y 1password-cli
+                fi
+                """
+            )
+        ),
+    )
 }
 
 

@@ -1,28 +1,23 @@
-
 from setuptools import setup, find_packages
 
+with open('requirements.txt') as f:
+    requirements = f.read().splitlines()
+
 setup(
-    name='umstellar',
-    version='0.1',
+    name="umstellar",
+    version="0.1",
     packages=find_packages(),
-    entry_points={
-        'console_scripts': [
-            'ultramarine-stellar-setup=umstellar.__main__:main'
-        ]
-    },
-    install_requires=[
-        # 'PyGObject',
-        'requests'# add any required dependencies here
-    ],
-    author='Cappy Ishihara',
-    author_email='your.email@example.com',
-    description='A short description of your package',
-    long_description=open('README.md').read(),
-    long_description_content_type='text/markdown',
-    url='https://github.com/yourusername/umstellar',
+    entry_points={"console_scripts": []},
+    install_requires=requirements,
+    author="Cappy Ishihara",
+    author_email="cappy@fyralabs.com",
+    description="Ultramarine Quickstart Tool",
+    long_description=open("README.md").read(),
+    long_description_content_type="text/markdown",
+    url="https://github.com/Ultramarine-Linux/umstellar",
     classifiers=[
-        'Programming Language :: Python :: 3',
-        'License :: OSI Approved :: GPLv3 License',
-        'Operating System :: OS Independent',
+        "Programming Language :: Python :: 3",
+        "License :: OSI Approved :: GPLv3 License",
+        "Operating System :: Linux :: Ultramarine",
     ],
 )

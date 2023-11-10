@@ -3,7 +3,9 @@
 
 %post --nochroot
 export STELLAR_CHROOT=/mnt/sysroot
-python -m umstellar
+
+# only run Install driver code for now
+python -m umstellar.driver
 
 
 %end

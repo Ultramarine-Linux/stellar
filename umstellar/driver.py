@@ -90,7 +90,7 @@ def get_nvidia_packages() -> list[str]:
     ver = get_nvidia_driver(chipset)
 
     if ver == "unsupported":
-        print("WARN: Unsupported NVIDIA GPU detected, keeping nouveau drivers")
+        logging.warning("Unsupported NVIDIA GPU detected, keeping nouveau drivers")
         return pkgs
 
     if ver == "latest":
@@ -121,7 +121,7 @@ def setup_nvidia_ostree():
     # Set up Nvidia drivers while on RPM-OSTree
     pkgs = get_nvidia_packages()
 
-    print(f"Installing Nvidia packages: {pkgs}")
+    logging.info(f"Installing Nvidia packages: {pkgs}")
 
     args = ["rpm-ostree", "install", "-y"]
 
@@ -144,48 +144,43 @@ def setup_nvidia_ostree():
 
 def setup_nvidia(primary_gpu: bool = False):
     # Set to True anyway if STELLAR_OPTION is set to 1
-    if os.environ["STELLAR_OPTION"] == "1":
+    primary_gpu = False
+    if "STELLAR_OPTION" in os.environ and os.environ["STELLAR_OPTION"] == "1":
         primary_gpu = True
+
     # Set up NVIDIA drivers, if applicable
-
-    # Check if an internet connection is available
-
-    if not check_internet_connection():
-        print("No internet connection detected, skipping Nvidia driver setup")
-        return
-
     if not check_nvidia_gpu():
-        print("No Nvidia GPU detected, skipping Nvidia driver setup")
+        logging.warning("No Nvidia GPU detected, skipping Nvidia driver setup")
         return
 
     if check_ostree():
-        print("OSTree detected, doing alternate Nvidia driver setup")
+        logging.info("OSTree detected, doing alternate Nvidia driver setup")
         setup_nvidia_ostree()
         return
 
     pkgs = get_nvidia_packages()
 
-    print(f"Installing Nvidia packages: {pkgs}")
+    logging.info(f"Installing Nvidia packages: {pkgs}")
 
     args = ["sudo", "dnf", "install", "-y", "--allowerasing", "--best"]
     args.extend(pkgs)
 
-    print(f"Running command: {args}")
+    logging.info(f"Running command: {args}")
 
     util.execute(" ".join(args))
 
     if primary_gpu:
-        print("Setting Nvidia GPU as primary GPU")
+        logging.info("Setting Nvidia GPU as primary GPU")
         util.execute(
             """
             sudo cp -p /usr/share/X11/xorg.conf.d/nvidia.conf /etc/X11/xorg.conf.d/nvidia.conf
-            sudo sed -i '10i\        Option "PrimaryGPU" "yes"' /etc/X11/xorg.conf.d/nvidia.conf
+            sudo sed -i '10i\\        Option "PrimaryGPU" "yes"' /etc/X11/xorg.conf.d/nvidia.conf
             """,
         )
 
 
-if __name__ == "__main__":
-    setup_nvidia()
+
+    
 
 
 def nvidia_payload() -> bool:
@@ -194,3 +189,50 @@ def nvidia_payload() -> bool:
     """
     setup_nvidia()
     return True
+
+
+# Broadcom Drivers
+
+def check_broadcom_wifi() -> bool:
+    """
+    Returns True if a Broadcom wifi card is installed
+    """
+    # search if Network, and Broadcom are in the output of lspci
+
+    return subprocess.call("lspci | grep -q -i Network | grep -q -i Broadcom", shell=True) == 0
+
+
+def check_broadcom_bluetooth() -> bool:
+    """
+    Returns True if a Broadcom bluetooth card is installed
+    """
+    # search if Network, and Broadcom are in the output of lspci
+
+    return subprocess.call("lspci | grep -q -i Bluetooth | grep -q -i Broadcom", shell=True) == 0
+
+
+def setup_broadcom():
+    if not check_broadcom_wifi():
+        logging.warning("No Broadcom wifi card detected, skipping Broadcom driver setup")
+        return
+    else:
+        logging.info("Broadcom wifi card detected, installing Broadcom wifi drivers")
+        util.execute("sudo dnf install -y broadcom-wl akmod-wl")
+
+    if not check_broadcom_bluetooth():
+        logging.warning("No Broadcom bluetooth card detected, skipping Broadcom driver setup")
+        return
+    
+    else:
+        logging.info("Broadcom bluetooth card detected, installing Broadcom bluetooth drivers")
+        util.execute("sudo dnf install -y broadcom-bt-firmware")
+
+
+
+
+if __name__ == "__main__":
+    if not check_internet_connection():
+        logging.warning("No internet connection detected, skipping driver setup")
+        exit(1)
+    setup_nvidia()
+    setup_broadcom()
