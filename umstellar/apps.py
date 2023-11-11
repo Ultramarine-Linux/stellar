@@ -269,9 +269,9 @@ def test():
     # apps["nvidia"].execute()
 
 
-class AppEntry(Adw.ActionRow):
+class AppEntry(Adw.ExpanderRow):
     def __init__(self, app: App, id: str):
-        super().__init__()
+        super().__init__(enable_expansion=False)
         self.app = app
         self.appid = id
         self.set_title(app.name)
@@ -291,21 +291,25 @@ class AppEntry(Adw.ActionRow):
             # set sensitive to whatever the tickbox status is by connecting it
             act = app.option.option
             self.option_toggle = Gtk.CheckButton(
-                visible=False, sensitive=act, active=act
+                # sensitive=act, active=act,
+                margin_start=10,
+                margin_end=10,
+                margin_bottom=5,
+                margin_top=5,
             )
 
             # add option toggle as suffix
             self.optionbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
             self.desc_label = Gtk.Label(
-                css_classes=["h6"], label=app.option.description, visible=False
+                css_classes=["h4"], label=app.option.description
             )
-            # desc_label.set_text(app.option.description)
-            self.optionbox.append(self.desc_label)
             self.optionbox.append(self.option_toggle)
-            self.add_suffix(self.optionbox)
+            self.optionbox.append(self.desc_label)
+            self.add_row(self.optionbox)
 
     def on_activate(self, _):
         logging.debug(f"Activating {self.app.name}")
 
     def on_tickbox_toggled(self, tickbox):
-        self.option_toggle.set_sensitive(tickbox.get_active())
+        if self.app.option:
+            self.set_enable_expansion(self.tickbox.get_active())

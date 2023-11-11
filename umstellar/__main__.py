@@ -84,11 +84,11 @@ class MainWindow(Gtk.ApplicationWindow):
             # connect row's suffix's tickbox to an action
             # where it adds the app to the list of apps to install
 
-            row.tickbox.connect("toggled", self.on_app_toggled)
+            row.tickbox.connect("toggled", self.on_app_toggled(row))
 
             # some doesn't have option_toggle
             with suppress(AttributeError):
-                row.option_toggle.connect("toggled", self.on_rowoption_toggled)
+                row.option_toggle.connect("toggled", self.on_rowoption_toggled(row))
 
             listbox.append(row)
 
@@ -103,43 +103,27 @@ class MainWindow(Gtk.ApplicationWindow):
         self.box.append(content_box)
         self.scrolled.set_child(self.box)
 
-    def on_app_toggled(self, checkbtn, **kwargs):
-        logging.debug("toggled")
+    def on_app_toggled(self, appentry: apps.AppEntry):
+        def inner(checkbtn, **kwargs):
+            logging.debug("toggled")
 
-        parent: apps.AppEntry = checkbtn.get_parent().get_parent().get_parent()
-        logging.debug(parent)
-        if checkbtn.get_active():
-            # set key of id in app_list to app
-            app_list.update({parent.appid: parent.app})
-            with suppress():
-                parent.desc_label.show()
-                parent.optionbox.show()
-                parent.option_toggle.show()
-        else:
-            # remove key from app_list
-            app_list.pop(parent.appid)
-            parent.optionbox.hide()
+            if checkbtn.get_active():
+                # set key of id in app_list to app
+                app_list.update({appentry.appid: appentry.app})
+                with suppress(AttributeError):
+                    appentry.desc_label.set_visible(True)
+                    appentry.optionbox.set_visible(True)
+                    appentry.option_toggle.set_visible(True)
+            else:
+                # remove key from app_list
+                app_list.pop(appentry.appid)
+                with suppress(AttributeError):
+                    appentry.optionbox.set_visible(False)
 
-        logging.debug(app_list)
-        self.install_button.set_sensitive(any(app_list))
+            logging.debug(app_list)
+            self.install_button.set_sensitive(any(app_list))
 
-    def on_option_toggled(self, checkbtn, **kwargs):
-        logging.debug("toggled")
-
-        parent = checkbtn.get_parent().get_parent().get_parent()
-        logging.debug(parent)
-        if checkbtn.get_active():
-            # set key of id in app_list to app
-            app_list.update({parent.appid: parent.app})
-            parent.optionbox.show()
-        else:
-            # remove key from app_list
-            app_list.pop(parent.appid)
-
-        logging.debug(app_list)
-        # update option toggle sensitivity, or something
-
-        parent.optionbox.hide()
+        return inner
 
     def close_window(self):
         self.close()
@@ -156,19 +140,17 @@ class MainWindow(Gtk.ApplicationWindow):
         logging.debug(button)
         exit(0)
 
-    def on_rowoption_toggled(self, checkbtn, **kwargs):
-        act = checkbtn.get_active()
-        parent = checkbtn.get_parent().get_parent().get_parent().get_parent()
+    def on_rowoption_toggled(self, parent):
+        def inner(checkbtn, **kwargs):
+            act = checkbtn.get_active()
 
-        # what the hell is this?
-        if act:
-            if parent.appid in app_list:
-                app_list[parent.appid].option.set(act)
-        else:
-            if parent.appid in app_list:
-                app_list[parent.appid].option.set(act)
+            if opt := app_list[parent.appid].option:
+                if parent.appid in app_list:
+                    opt.set(act)
 
-        logging.debug(app_list)
+            logging.debug(app_list)
+
+        return inner
 
 
 class App(Adw.Application):
