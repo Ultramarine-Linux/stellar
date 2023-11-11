@@ -185,9 +185,16 @@ class MainWindow(Gtk.ApplicationWindow):
                 continue
             row = apps.AppEntry(app, id)
 
+            # check app_list if the app is already in the list
+            # if it is, set the tickbox to active, same for the option_toggle
+            app_entry = app_list.get(id, None)
+            if app_entry:
+                row.tickbox.set_active(True)
+                with suppress(AttributeError):
+                    row.option_toggle.set_active(app_entry.option.option)
+
             # connect row's suffix's tickbox to an action
             # where it adds the app to the list of apps to install
-
             row.tickbox.connect("toggled", self.on_app_toggled(row))
 
             # some doesn't have option_toggle

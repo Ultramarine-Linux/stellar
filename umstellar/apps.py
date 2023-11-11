@@ -387,6 +387,10 @@ class AppEntry(Adw.ExpanderRow):
         # add as suffix
         self.add_prefix(self.tickbox)
 
+        if not app.option:
+            # hide enable expansion button if there's no option
+            self.set_show_enable_switch(False)
+
         if app.option:
             # Prefix, for the feature flags
             # set sensitive to whatever the tickbox status is by connecting it
