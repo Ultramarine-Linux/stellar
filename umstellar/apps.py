@@ -1,16 +1,15 @@
 # List of apps/presets to be installed
 
 import os
-import subprocess
 import logging
-from . import driver, log
+from . import driver
 import gi
 from . import util
 
 gi.require_version("Gtk", "4.0")
 # libadwaita
 gi.require_version("Adw", "1")
-from gi.repository import Gtk, Adw, Gio
+from gi.repository import Gtk, Adw
 
 
 class Script:
@@ -57,10 +56,9 @@ class Option:
             os.environ["STELLAR_OPTION"] = "1"
         else:
             os.environ["STELLAR_OPTION"] = "0"
-            
+
     def __repr__(self):
         return f"Option(description={self.description}, option={self.option})"
-
 
 
 class App:
@@ -69,8 +67,8 @@ class App:
         name: str,
         description: str,
         payload: Payload,
-        option: Option = None,
-        category: str = None,
+        option: Option | None = None,
+        category: str | None = None,
     ):
         self.name = name
         self.description = description
@@ -91,9 +89,11 @@ class App:
             "payload": self.payload,
             "option": {
                 "description": self.option.description,
-                "option": self.option.option
-            } if self.option else None,
-            "category": self.category
+                "option": self.option.option,
+            }
+            if self.option
+            else None,
+            "category": self.category,
         }
 
     def execute(self):
@@ -257,12 +257,13 @@ EOF
                 """
             )
         ),
-    )
+    ),
 }
 
 
 def test():
     # test: try to install steam
+    assert apps["steam"].option
     apps["steam"].option.set(True)
     apps["steam"].execute()
     # apps["nvidia"].execute()
@@ -285,27 +286,21 @@ class AppEntry(Adw.ActionRow):
         # add as suffix
         self.add_prefix(self.tickbox)
 
-        # Prefix, for the feature flags
-        self.option_toggle = Gtk.CheckButton()
-        # set sensitive to whatever the tickbox status is by connecting it
-        if app.option is not None:
-            self.option_toggle.set_sensitive(app.option.option)
-            self.option_toggle.set_active(app.option.option)
-        else:
-            self.option_toggle.set_sensitive(False)
-
         if app.option:
-            self.option_toggle.set_active(app.option.option)
+            # Prefix, for the feature flags
+            # set sensitive to whatever the tickbox status is by connecting it
+            act = app.option.option
+            self.option_toggle = Gtk.CheckButton(
+                visible=False, sensitive=act, active=act
+            )
 
             # add option toggle as suffix
-            self.optionbox = Gtk.Box()
-            # make it horizontal
-            self.optionbox.set_orientation(Gtk.Orientation.HORIZONTAL)
-            desc_label = Gtk.Label()
-            # make text small
-            desc_label.add_css_class("h6")
-            desc_label.set_text(app.option.description)
-            self.optionbox.append(desc_label)
+            self.optionbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
+            self.desc_label = Gtk.Label(
+                css_classes=["h6"], label=app.option.description, visible=False
+            )
+            # desc_label.set_text(app.option.description)
+            self.optionbox.append(self.desc_label)
             self.optionbox.append(self.option_toggle)
             self.add_suffix(self.optionbox)
 

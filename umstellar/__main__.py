@@ -1,74 +1,56 @@
+from contextlib import suppress
 import gi
-import sys
 import logging
 from . import apps
-from gi.repository import Gtk, Adw, GObject, GLib
-from . import log
+from gi.repository import Gtk, Adw
 
 
 gi.require_version("Gtk", "4.0")
-# libadwaita
 gi.require_version("Adw", "1")
 
-global app_list
-app_list = {}
-
+app_list: dict[str, apps.App] = {}
 
 
 class MainWindow(Gtk.ApplicationWindow):
     def __init__(self, *args, **kwargs):
+        kwargs["resizable"] = False
+        kwargs["title"] = "Set up your system"
         super().__init__(*args, **kwargs)
+        self.set_default_size(800, 600)
         # Things will go here
-        title = Adw.WindowTitle()
-        title.set_title("Set up your system")
         self.header_bar = Adw.HeaderBar()
         logging.debug(self.header_bar.get_decoration_layout())
         # do not show window controls
-        self.header_bar.set_title_widget(title)
+        self.header_bar.set_title_widget(Adw.WindowTitle(title="Set up your system"))
         self.header_bar.set_show_end_title_buttons(False)
-        # don't allow resizing
-        self.set_resizable(False)
         # don't add controls to headerbar
         # self.header_bar.set_show_close_button(False)
         self.install_button = Gtk.Button(
-            label="Install",
+            label="Install", css_classes=["suggested-action"], sensitive=False
         )
-        self.install_button.add_css_class("suggested-action")
-        self.install_button.set_sensitive(False)
-
         self.install_button.connect("clicked", self.install)
 
-        skip_button = Gtk.Button(
-            label="Skip",
-        )
+        skip_button = Gtk.Button(label="Skip")
         # skip_button.add_css_class("destructive-action")
 
         skip_button.connect("clicked", self.skip)
 
-        self.header_bar.pack_start(
-            skip_button,
-        )
-
+        self.header_bar.pack_start(skip_button)
         # add button to headerbar (on the end)
-        self.header_bar.pack_end(
-            self.install_button,
-        )
+        self.header_bar.pack_end(self.install_button)
 
         self.set_titlebar(self.header_bar)
         self.scrolled = Gtk.ScrolledWindow()
         self.scrolled.set_size_request(800, 600)
-        self.set_title("Set up your system")
-        self.set_default_size(800, 600)
+
         # force max box size to be 800x600
 
-        self.box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        self.box = Gtk.Box(
+            orientation=Gtk.Orientation.VERTICAL, vexpand=False, hexpand=False
+        )
         # self.box.set_size_request(800, 600)
-        self.box.set_vexpand(False)
-        self.box.set_hexpand(False)
         self.set_child(self.scrolled)
         # force size of box1 to be 800x600
-        # dont allow resizing
-        self.set_resizable(False)
 
         # box padding of 25px
 
@@ -79,20 +61,12 @@ class MainWindow(Gtk.ApplicationWindow):
 
         # split into 2 boxes
 
-        header_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        header_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, margin_bottom=25)
 
-        cta_label = Gtk.Label()
-        cta_label.add_css_class("h4")
-
-        cta_label = Gtk.Label()
-
+        cta_label = Gtk.Label(css_classes=["h4"])
         cta_label.set_markup("Select the apps you want to install")
 
         header_box.append(cta_label)
-
-        # set headerbox margin
-
-        header_box.set_margin_bottom(25)
 
         self.box.append(header_box)
 
@@ -100,10 +74,9 @@ class MainWindow(Gtk.ApplicationWindow):
 
         # GtkListBox of AdwActionRows
 
-        listbox = Gtk.ListBox()
-
-        listbox.set_selection_mode(Gtk.SelectionMode.NONE)
-        listbox.add_css_class("boxed-list")
+        listbox = Gtk.ListBox(
+            selection_mode=Gtk.SelectionMode.NONE, css_classes=["boxed-list"]
+        )
 
         for id, app in apps.apps.items():
             row = apps.AppEntry(app, id)
@@ -113,7 +86,9 @@ class MainWindow(Gtk.ApplicationWindow):
 
             row.tickbox.connect("toggled", self.on_app_toggled)
 
-            row.option_toggle.connect("toggled", self.on_rowoption_toggled)
+            # some doesn't have option_toggle
+            with suppress(AttributeError):
+                row.option_toggle.connect("toggled", self.on_rowoption_toggled)
 
             listbox.append(row)
 
@@ -121,47 +96,45 @@ class MainWindow(Gtk.ApplicationWindow):
 
         # Second list box for uhh feature flags for each app
 
-        listbox2 = Gtk.ListBox()
-
-        listbox2.set_selection_mode(Gtk.SelectionMode.NONE)
-
-        listbox2.add_css_class("boxed-list")
+        # listbox2 = Gtk.ListBox(
+        #     selection_mode=Gtk.SelectionMode.NONE, css_classes=["boxed-list"]
+        # )
 
         self.box.append(content_box)
         self.scrolled.set_child(self.box)
 
     def on_app_toggled(self, checkbtn, **kwargs):
         logging.debug("toggled")
-        act = checkbtn.get_active()
 
-        parent = checkbtn.get_parent().get_parent().get_parent()
+        parent: apps.AppEntry = checkbtn.get_parent().get_parent().get_parent()
         logging.debug(parent)
-        if act:
+        if checkbtn.get_active():
             # set key of id in app_list to app
             app_list.update({parent.appid: parent.app})
+            with suppress():
+                parent.desc_label.show()
+                parent.optionbox.show()
+                parent.option_toggle.show()
         else:
             # remove key from app_list
             app_list.pop(parent.appid)
+            parent.optionbox.hide()
 
         logging.debug(app_list)
-        if app_list:
-            self.install_button.set_sensitive(True)
-        else:
-            self.install_button.set_sensitive(False)
+        self.install_button.set_sensitive(any(app_list))
 
     def on_option_toggled(self, checkbtn, **kwargs):
         logging.debug("toggled")
-        act = checkbtn.get_active()
 
         parent = checkbtn.get_parent().get_parent().get_parent()
         logging.debug(parent)
-        if act:
+        if checkbtn.get_active():
             # set key of id in app_list to app
-            app_list.append({parent.appid: parent.app})
+            app_list.update({parent.appid: parent.app})
             parent.optionbox.show()
         else:
             # remove key from app_list
-            app_list.remove({parent.appid: parent.app})
+            app_list.pop(parent.appid)
 
         logging.debug(app_list)
         # update option toggle sensitivity, or something
@@ -187,6 +160,7 @@ class MainWindow(Gtk.ApplicationWindow):
         act = checkbtn.get_active()
         parent = checkbtn.get_parent().get_parent().get_parent().get_parent()
 
+        # what the hell is this?
         if act:
             if parent.appid in app_list:
                 app_list[parent.appid].option.set(act)
@@ -195,6 +169,7 @@ class MainWindow(Gtk.ApplicationWindow):
                 app_list[parent.appid].option.set(act)
 
         logging.debug(app_list)
+
 
 class App(Adw.Application):
     def __init__(self, **kwargs):
