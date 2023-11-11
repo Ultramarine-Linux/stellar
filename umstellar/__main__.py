@@ -40,19 +40,39 @@ class MainWindow(Gtk.ApplicationWindow):
         self.header_bar.pack_end(self.install_button)
 
         self.set_titlebar(self.header_bar)
+
         self.scrolled = Gtk.ScrolledWindow()
         self.scrolled.set_size_request(800, 600)
-
         # force max box size to be 800x600
 
+        # self.sidebar = Gtk.StackSidebar()
+        # self.sidebar.get_stack()
+
+        self.sidebar = Gtk.ListBox(selection_mode=Gtk.SelectionMode.SINGLE)
+        for cat in set(x.category or "Miscellaneous" for x in apps.apps.values()):
+            logging.info(f"Found category {cat}")
+            row = Gtk.ListBoxRow(name=cat)
+            row.set_child(
+                Gtk.Label(
+                    label=cat.title(),
+                    margin_top=10,
+                    margin_bottom=10,
+                    margin_start=25,
+                    margin_end=25,
+                )
+            )
+            self.sidebar.append(row)
+        self.sidebar.connect("row-activated", self.on_sidebar_click)
+
+        # left = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
+        # left.set_size_request(200, -1)
+        # left.append(self.sidebar)
+
         self.box = Gtk.Box(
-            orientation=Gtk.Orientation.VERTICAL, vexpand=False, hexpand=False
+            orientation=Gtk.Orientation.VERTICAL, vexpand=False, hexpand=True
         )
-        # self.box.set_size_request(800, 600)
         self.set_child(self.scrolled)
         # force size of box1 to be 800x600
-
-        # box padding of 25px
 
         self.box.set_margin_start(25)
         self.box.set_margin_end(25)
@@ -74,11 +94,17 @@ class MainWindow(Gtk.ApplicationWindow):
 
         # GtkListBox of AdwActionRows
 
-        listbox = Gtk.ListBox(
+        self.listbox = Gtk.ListBox(
             selection_mode=Gtk.SelectionMode.NONE, css_classes=["boxed-list"]
         )
 
+        default_cat = self.sidebar.get_first_child()
+        assert default_cat, "somehow it's None?"
+        default_cat = default_cat.get_name()
+
         for id, app in apps.apps.items():
+            if default_cat != app.category:
+                continue
             row = apps.AppEntry(app, id)
 
             # connect row's suffix's tickbox to an action
@@ -90,9 +116,9 @@ class MainWindow(Gtk.ApplicationWindow):
             with suppress(AttributeError):
                 row.option_toggle.connect("toggled", self.on_rowoption_toggled(row))
 
-            listbox.append(row)
+            self.listbox.append(row)
 
-        content_box.append(listbox)
+        content_box.append(self.listbox)
 
         # Second list box for uhh feature flags for each app
 
@@ -101,7 +127,40 @@ class MainWindow(Gtk.ApplicationWindow):
         # )
 
         self.box.append(content_box)
-        self.scrolled.set_child(self.box)
+
+        self.big_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
+        self.big_box.append(self.sidebar)  # left
+        self.big_box.append(self.box)
+
+        self.scrolled.set_child(self.big_box)
+
+    def on_sidebar_click(self, _: Gtk.ListBox, row: Gtk.ListBoxRow, **kwargs):
+        logging.debug("Sidebar moment")
+        cat = row.get_name()
+
+        # clear the listbox
+        while child := self.listbox.get_first_child():
+            self.listbox.remove(child)
+
+        # TOOD: refactor
+        for id, app in apps.apps.items():
+            if cat == "Miscellaneous":
+                if app.category:
+                    continue
+            elif app.category != cat:
+                continue
+            row = apps.AppEntry(app, id)
+
+            # connect row's suffix's tickbox to an action
+            # where it adds the app to the list of apps to install
+
+            row.tickbox.connect("toggled", self.on_app_toggled(row))
+
+            # some doesn't have option_toggle
+            with suppress(AttributeError):
+                row.option_toggle.connect("toggled", self.on_rowoption_toggled(row))
+
+            self.listbox.append(row)
 
     def on_app_toggled(self, appentry: apps.AppEntry):
         def inner(checkbtn, **kwargs):
