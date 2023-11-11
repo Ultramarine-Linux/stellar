@@ -324,7 +324,7 @@ EOF
         category="drivers",
     ),
     "intel-ipu6": App(
-        name="Intel IPU6 Component",
+        name="Intel IPU6 Drivers",
         description="Intel IPU6 component for MIPI camera support on Intel Tiger Lake, Alder Lake, and beyond",
         payload=Payload(
             Script(
