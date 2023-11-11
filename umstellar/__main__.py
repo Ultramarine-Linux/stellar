@@ -42,27 +42,46 @@ class MainWindow(Gtk.ApplicationWindow):
         self.set_titlebar(self.header_bar)
 
         self.scrolled = Gtk.ScrolledWindow()
-        self.scrolled.set_size_request(800, 600)
+        self.scrolled.set_size_request(800, 200)
         # force max box size to be 800x600
 
         # self.sidebar = Gtk.StackSidebar()
         # self.sidebar.get_stack()
 
         self.sidebar = Gtk.ListBox(selection_mode=Gtk.SelectionMode.SINGLE)
-        for cat in set(x.category or "Miscellaneous" for x in apps.apps.values()):
+        for cat in sorted(
+            set(x.category or "Miscellaneous" for x in apps.apps.values())
+        ):
             logging.info(f"Found category {cat}")
             row = Gtk.ListBoxRow(name=cat)
-            row.set_child(
-                Gtk.Label(
-                    label=cat.title(),
-                    margin_top=10,
-                    margin_bottom=10,
-                    margin_start=25,
-                    margin_end=25,
-                )
+            # set icon for the row too
+
+            row_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
+
+            # Get icon name from apps.py:category_icons dict
+            # if not found, use "applications-other"
+            icon_name = apps.category_icons.get(cat, "applications-other")
+            icon = Gtk.Image.new_from_icon_name(icon_name)
+
+            row_box.append(icon)
+
+            title_label = Gtk.Label(
+                label=cat.title(),
+                margin_top=10,
+                margin_bottom=10,
+                margin_start=25,
+                margin_end=25,
             )
+
+            row_box.append(title_label)
+
+
+            row.set_child(row_box)
+            # make row text align to the left
+            row.get_child().set_halign(Gtk.Align.START)
             self.sidebar.append(row)
-        self.sidebar.connect("row-activated", self.on_sidebar_click)
+        self.sidebar.connect("row-selected", self.on_sidebar_click)
+        self.sidebar.add_css_class("navigation-sidebar")
 
         # left = Gtk.Box(orientation=Gtk.Orientation.VERTICAL)
         # left.set_size_request(200, -1)
@@ -71,7 +90,7 @@ class MainWindow(Gtk.ApplicationWindow):
         self.box = Gtk.Box(
             orientation=Gtk.Orientation.VERTICAL, vexpand=False, hexpand=True
         )
-        self.set_child(self.scrolled)
+
         # force size of box1 to be 800x600
 
         self.box.set_margin_start(25)
@@ -84,7 +103,9 @@ class MainWindow(Gtk.ApplicationWindow):
         header_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, margin_bottom=25)
 
         cta_label = Gtk.Label(css_classes=["h4"])
-        cta_label.set_markup("Select the apps you want to install")
+        cta_label.set_markup(
+            "Select the components you want to also include in your system"
+        )
 
         header_box.append(cta_label)
 
@@ -98,9 +119,13 @@ class MainWindow(Gtk.ApplicationWindow):
             selection_mode=Gtk.SelectionMode.NONE, css_classes=["boxed-list"]
         )
 
+        # self.listbox.add_css_class("navigation-sidebar")
+
         default_cat = self.sidebar.get_first_child()
-        assert default_cat, "somehow it's None?"
-        default_cat = default_cat.get_name()
+        if default_cat:
+            default_cat = default_cat.get_name()
+        else:
+            default_cat = "Miscellaneous"
 
         for id, app in apps.apps.items():
             if default_cat != app.category:
@@ -120,21 +145,30 @@ class MainWindow(Gtk.ApplicationWindow):
 
         content_box.append(self.listbox)
 
-        # Second list box for uhh feature flags for each app
-
-        # listbox2 = Gtk.ListBox(
-        #     selection_mode=Gtk.SelectionMode.NONE, css_classes=["boxed-list"]
-        # )
-
         self.box.append(content_box)
 
-        self.big_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
-        self.big_box.append(self.sidebar)  # left
-        self.big_box.append(self.box)
+        # note: this is the main view
 
-        self.scrolled.set_child(self.big_box)
+        # self.big_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
+        self.big_box = Adw.NavigationSplitView()
+        self.big_box.set_size_request(800, 600)
+        # set size limit to 800x600
+        
 
-    def on_sidebar_click(self, _: Gtk.ListBox, row: Gtk.ListBoxRow, **kwargs):
+        self.set_child(self.big_box)
+        # todo: port to Adw.NavigationSplitView
+        sidebar_page = Adw.NavigationPage()
+        sidebar_page.set_child(self.sidebar)
+        self.big_box.set_sidebar(sidebar_page)
+
+        self.list_page = Adw.NavigationPage()
+        self.scrolled.set_child(self.box)
+        self.list_page.set_child(self.scrolled)
+        self.big_box.set_content(self.list_page)
+
+        # self.scrolled.set_child(self.big_box)
+
+    def on_sidebar_click(self, _: Gtk.ListBox, row: Gtk.ListBoxRow):
         logging.debug("Sidebar moment")
         cat = row.get_name()
 
@@ -163,7 +197,7 @@ class MainWindow(Gtk.ApplicationWindow):
             self.listbox.append(row)
 
     def on_app_toggled(self, appentry: apps.AppEntry):
-        def inner(checkbtn, **kwargs):
+        def inner(checkbtn):
             logging.debug("toggled")
 
             if checkbtn.get_active():
@@ -175,12 +209,12 @@ class MainWindow(Gtk.ApplicationWindow):
                     appentry.option_toggle.set_visible(True)
             else:
                 # remove key from app_list
-                app_list.pop(appentry.appid)
+                app_list.pop(appentry.appid, None)
                 with suppress(AttributeError):
                     appentry.optionbox.set_visible(False)
 
             logging.debug(app_list)
-            self.install_button.set_sensitive(any(app_list))
+            self.install_button.set_sensitive(bool(app_list))
 
         return inner
 
@@ -188,22 +222,22 @@ class MainWindow(Gtk.ApplicationWindow):
         self.close()
         return
 
-    def install(self, button):
+    def install(self, _):
         self.close_window()
         logging.debug(app_list)
         self.destroy()
 
-    def skip(self, button):
+    def skip(self, _):
         # exit
         logging.debug("exiting")
-        logging.debug(button)
         exit(0)
 
     def on_rowoption_toggled(self, parent):
-        def inner(checkbtn, **kwargs):
+        def inner(checkbtn):
             act = checkbtn.get_active()
 
-            if opt := app_list[parent.appid].option:
+            if opt := app_list.get(parent.appid, None).option:
+                opt.set(act)
                 if parent.appid in app_list:
                     opt.set(act)
 

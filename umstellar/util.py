@@ -28,6 +28,10 @@ def execute(payload: str):
         with open(tmpfile, "w") as f:
             f.write(pl)
 
+        # chmod +x the temporary file
+
+        os.chmod(tmpfile, 0o755)
+
         # finally execute the script
 
         proc = subprocess.Popen(f"chroot {chroot} /tmp/stellar-payload.sh", shell=True)

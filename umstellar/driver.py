@@ -174,7 +174,7 @@ def setup_nvidia(primary_gpu: bool = False):
         util.execute(
             """
             sudo cp -p /usr/share/X11/xorg.conf.d/nvidia.conf /etc/X11/xorg.conf.d/nvidia.conf
-            sudo sed -i '10i\\        Option "PrimaryGPU" "yes"' /etc/X11/xorg.conf.d/nvidia.conf
+            sudo sed -i '10i\\\tOption "PrimaryGPU" "yes"' /etc/X11/xorg.conf.d/nvidia.conf
             """,
         )
 

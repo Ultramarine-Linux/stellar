@@ -175,7 +175,7 @@ EOF
                 """
             )
         ),
-        category="apps",
+        # category="apps",
     ),
     "msedge": App(
         name="Microsoft Edge",
@@ -202,7 +202,7 @@ EOF
                 """
             )
         ),
-        category="apps",
+        # category="apps",
     ),
     "bottles": App(
         name="Bottles",
@@ -226,10 +226,10 @@ EOF
                 """
             )
         ),
-        category="apps",
+        # category="apps",
     ),
     "fish": App(
-        name="Fish",
+        name="Fish Shell",
         description="Fish shell",
         payload=Payload(
             Script(
@@ -238,12 +238,47 @@ EOF
                 """
             )
         ),
-        category="apps",
+        # category="apps",
+    ),
+    "nushell": App(
+        name="Nushell",
+        description="Nushell shell",
+        payload=Payload(
+            Script(
+                """
+                sudo dnf install -y nushell
+                """
+            )
+        ),
+        # category="apps",
+    ),
+    "waydroid": App(
+        name="Waydroid",
+        description="Linux subsystem for Android, powered by Wayland and LXC (Does not work on X11 and NVIDIA GPUs)",
+        payload=Payload(
+            Script(
+                """
+                sudo dnf install -y waydroid
+                """
+            )
+        ),
+    ),
+    "flatpak-warehouse": App(
+        name="Warehouse",
+        description="Graphical Flatpak manager",
+        payload=Payload(
+            Script(
+                """
+                sudo flatpak install -y flathub io.github.flattool.Warehouse || true
+                """
+            )
+        ),
     ),
     "1password": App(
         name="1Password",
         description="1Password password manager",
         option=Option(description="Also install 1Password CLI"),
+        category="apps",
         payload=Payload(
             Script(
                 """
@@ -258,6 +293,72 @@ EOF
             )
         ),
     ),
+    "broadcom": App(
+        name="Broadcom Drivers",
+        description="Broadcom wifi and bluetooth drivers",
+        payload=Payload(driver.setup_broadcom),
+        category="drivers",
+    ),
+    "v4l2loopback": App(
+        name="v4l2loopback",
+        description="Virtual webcam and video loopback driver",
+        payload=Payload(
+            Script(
+                """
+                sudo dnf install -y akmod-v4l2loopback
+                """
+            )
+        ),
+        category="drivers",
+    ),
+    "crystalhd": App(
+        name="Crystal HD",
+        description="Broadcom Crystal HD video decoder driver",
+        payload=Payload(
+            Script(
+                """
+                sudo dnf install -y akmod-crystalhd
+                """
+            )
+        ),
+        category="drivers",
+    ),
+    "intel-ipu6": App(
+        name="Intel IPU6 Component",
+        description="Intel IPU6 component for MIPI camera support on Intel Tiger Lake, Alder Lake, and beyond",
+        payload=Payload(
+            Script(
+                """
+                sudo dnf install -y akmod-intel-ipu6
+                """
+            )
+        ),
+        category="drivers",
+    ),
+    "prismlauncher": App(
+        name="Prism Launcher",
+        description="Advanced Minecraft: Java Edition launcher",
+        payload=Payload(
+            Script(
+                """
+                if [ "$STELLAR_OPTION" = "1" ]; then
+                    flatpak install -y flathub org.prismlauncher.PrismLauncher || true
+                else
+                    sudo dnf install -y prismlauncher
+                fi
+                """
+            )
+        ),
+        category="apps",
+        option=Option(description="Install as flatpak (Removes system Java dependency)"),
+    )
+}
+
+
+category_icons = {
+    "drivers": "application-x-firmware-symbolic",
+    "apps": "system-software-install",
+    "Miscellaneous": "emoji-symbols",
 }
 
 
