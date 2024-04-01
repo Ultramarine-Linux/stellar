@@ -1,3 +1,1 @@
 Requests
-setuptools
-pygobject-stubs
