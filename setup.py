@@ -5,7 +5,7 @@ with open('requirements.txt') as f:
 
 setup(
     name="umstellar",
-    version="0.1.0",
+    version="0.2.0",
     packages=find_packages(),
     entry_points={"console_scripts": []},
     install_requires=requirements,
@@ -14,7 +14,7 @@ setup(
     description="Ultramarine Quickstart Tool",
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
-    url="https://github.com/Ultramarine-Linux/umstellar",
+    url="https://github.com/Ultramarine-Linux/stellar",
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: GPLv3 License",
