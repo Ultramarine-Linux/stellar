@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=Welcome to Ultramarine Linux
+Icon=preferences-system
+Exec=/usr/libexec/stellar-firstboot
+Terminal=false
+Type=Application
+StartupNotify=true
+Categories=System;

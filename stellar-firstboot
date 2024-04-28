@@ -1,0 +1,24 @@
+#!/bin/bash
+
+# A simple script to run Stellar on startup.
+# This script will run every time the computer starts up, but exits if it's requirements are already met.
+# i.e this script has already been run for the first time on this computer.
+
+# We will have an empty file that will be created after this script is run.
+
+FIRSTBOOT_CHECK="/var/lib/stellar/first_run"
+
+# This file should not exist if this is the first time this script is being run.
+
+# NOTE: If you're looking to run Stellar again, you can delete the /var/lib/stellar/first_run file, and then run this script again.
+# OR just run the Python module (python -m umstellar) directly.
+
+if [ -f "$FIRSTBOOT_CHECK" ]; then
+    exit 0
+fi
+
+python3 -m umstellar
+
+pkexec touch $FIRSTBOOT_CHECK
+
+exit 0

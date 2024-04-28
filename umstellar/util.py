@@ -45,7 +45,26 @@ def execute(payload: str):
     else:
         print("Running on host...")
         # Run the payload directly on the host
-        proc = subprocess.Popen(payload, shell=True)
+        pl = payload
+
+        if not pl.startswith("#!"):
+            # prepend shebang
+            pl = "#!/bin/sh\n" + pl
+
+        # Now, write the payload to a temporary file
+
+        tmpfile = "/tmp/stellar-payload.sh"
+
+        with open(tmpfile, "w") as f:
+            f.write(pl)
+
+        os.chmod(tmpfile, 0o755)
+
+
+        # proc = subprocess.Popen(payload, shell=True)
+        # Run script with pkexec
+
+        proc = subprocess.Popen(f"pkexec {tmpfile}", shell=True)
 
         p = proc.wait()
         return p
