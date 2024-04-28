@@ -4,7 +4,7 @@
  "http://www.freedesktop.org/standards/PolicyKit/1/policyconfig.dtd">
 <policyconfig>
 
-  <action id="com.fyralabs.pkexec.liveinst">
+  <action id="com.fyralabs.pkexec.umstellar">
     <description>Set up programs</description>
     <message>Authentication is required to install software</message>
     <icon_name>com.fyralabs.Stellar</icon_name>
