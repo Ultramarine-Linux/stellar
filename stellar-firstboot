@@ -19,6 +19,6 @@ fi
 
 python3 -m umstellar
 
-pkexec touch $FIRSTBOOT_CHECK
+touch $FIRSTBOOT_CHECK
 
 exit 0

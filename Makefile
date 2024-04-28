@@ -4,4 +4,5 @@ install:
 	# Copy scripts
 	install -m 755 stellar-firstboot /usr/libexec
 	install stellar-firstboot.desktop /etc/xdg/autostart
+	install com.fyralabs.pkexec.umstellar-firstboot.policy /usr/share/polkit-1/actions
 
