@@ -6,9 +6,9 @@ We hacked this together in a few days, just in time for Ultramarine Linux 39 whi
 
 ## Why?
 
-So, Ultramarine 39 is supposed to have a script that detects NVIDIA GPUs and installs the proprietary drivers. However, this script is implemented directly in a Kickstart file, which is... not ideal, and also *literally* injected in using a Bash script, inside a heredoc. This is a terrible idea, and I (Cappy) wanted to improve it a little bit.
+So, Ultramarine 39 is supposed to have a script that detects NVIDIA GPUs and installs the proprietary drivers. However, this script is implemented directly in a Kickstart file, which is... not ideal, and also _literally_ injected in using a Bash script, inside a heredoc. This is a terrible idea, and I (Cappy) wanted to improve it a little bit.
 
-This script should be deprecated in the future when we finally implement our own installer (Readymade), but for now. This is already a huge improvement over all the other Fedora-based distros that don't even have a post-install menu. (looking at you, Nobara, and you, UBlue)
+This script will be deprecated in the future when we implement our own OOBE (probably 41.) For now, it's a stopgap in our transitional OOBE (Readymade install -> Anaconda/DE OOBE -> Stellar)
 
 ## Running
 

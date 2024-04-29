@@ -21,12 +21,12 @@ class MainWindow(Gtk.ApplicationWindow):
         self.header_bar = Adw.HeaderBar()
         logging.debug(self.header_bar.get_decoration_layout())
         # do not show window controls
-        self.header_bar.set_title_widget(Adw.WindowTitle(title="Set up your system"))
+        self.header_bar.set_title_widget(Adw.WindowTitle(title="Install More Apps"))
         self.header_bar.set_show_end_title_buttons(False)
         # don't add controls to headerbar
         # self.header_bar.set_show_close_button(False)
         self.install_button = Gtk.Button(
-            label="Install", css_classes=["suggested-action"], sensitive=False
+            label="Install Selections", css_classes=["suggested-action"], sensitive=False
         )
         self.install_button.connect("clicked", self.install)
 
@@ -50,7 +50,7 @@ class MainWindow(Gtk.ApplicationWindow):
 
         self.sidebar = Gtk.ListBox(selection_mode=Gtk.SelectionMode.SINGLE)
         for cat in sorted(
-            set(x.category or "Miscellaneous" for x in apps.apps.values())
+            set(x.category or "Utilities" for x in apps.apps.values())
         ):
             logging.info(f"Found category {cat}")
             row = Gtk.ListBoxRow(name=cat)
@@ -125,7 +125,7 @@ class MainWindow(Gtk.ApplicationWindow):
         if default_cat:
             default_cat = default_cat.get_name()
         else:
-            default_cat = "Miscellaneous"
+            default_cat = "Utilities"
 
         for id, app in apps.apps.items():
             if default_cat != app.category:
@@ -178,7 +178,7 @@ class MainWindow(Gtk.ApplicationWindow):
 
         # TOOD: refactor
         for id, app in apps.apps.items():
-            if cat == "Miscellaneous":
+            if cat == "Utilities":
                 if app.category:
                     continue
             elif app.category != cat:

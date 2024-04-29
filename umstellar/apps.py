@@ -358,7 +358,7 @@ EOF
 category_icons = {
     "drivers": "application-x-firmware-symbolic",
     "apps": "system-software-install",
-    "Miscellaneous": "emoji-symbols",
+    "Utilities": "emoji-symbols",
 }
 
 
