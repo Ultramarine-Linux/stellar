@@ -107,7 +107,7 @@ apps = {
         # Define payload, but don't run it yet
         payload=Payload(driver.setup_nvidia),
         option=Option(description="Set NVIDIA GPU as primary GPU"),
-        category="drivers",
+        category="System"
     ),
     "steam": App(
         name="Steam",
@@ -126,7 +126,7 @@ apps = {
             ),
         ),
         option=Option(description="Don't start with dedicated GPU (Optimus patch)"),
-        category="apps",
+        category="Gaming",
     ),
     "chrome": App(
         name="Google Chrome",
@@ -143,15 +143,56 @@ enabled=1
 gpgcheck=1
 gpgkey=https://dl-ssl.google.com/linux/linux_signing_key.pub
 EOF
+                sudo dnf remove -y firefox
                 sudo dnf install -y google-chrome-stable || true
                 """
             )
         ),
-        category="apps",
+        category="Browsers",
     ),
+        "chromium": App(
+        name="Chromium",
+        description="Chrome without Google",
+        payload=Payload(
+            Script(
+                """
+                echo "Installing Chromium"
+                sudo dnf remove -y firefox
+                sudo dnf install -y chromium || true
+                """
+            )
+        ),
+        category="Browsers",
+        ),
+        "firefox": App(
+        name="Firefox (Default)",
+        description="Open-source web browser",
+        payload=Payload(
+            Script(
+                """
+                echo "Firefox already installed :3"
+                """
+            )
+        ),
+        category="Browsers",
+        ),
+        "epiphany": App(
+        name="Web",
+        description="A simple web browser for GNOME, AKA Epiphany",
+        payload=Payload(
+            Script(
+                """
+                echo "Installing Epiphany"
+                sudo dnf remove -y firefox
+                sudo dnf install -y epiphany || true
+                """
+            )
+        ),
+        category="Browsers",
+        ),
     "vscode": App(
         name="Visual Studio Code",
-        description="The Visual Studio Code editor",
+        description="Our team's IDE of choice. Simple and versatile.",
         payload=Payload(
             Script(
                 """
@@ -161,21 +202,35 @@ EOF
                 """
             )
         ),
-        category="apps",
+        category="Development",
+    ),
+       "codium": App(
+        name="VSCodium",
+        description="Visual Studio Code, without Microsoft",
+        payload=Payload(
+            Script(
+                """
+                sudo rpmkeys --import https://gitlab.com/paulcarroty/vscodium-deb-rpm-repo/-/raw/master/pub.gpg
+                printf "[gitlab.com_paulcarroty_vscodium_repo]\nname=download.vscodium.com\nbaseurl=https://download.vscodium.com/rpms/\nenabled=1\ngpgcheck=1\nrepo_gpgcheck=1\ngpgkey=https://gitlab.com/paulcarroty/vscodium-deb-rpm-repo/-/raw/master/pub.gpg\nmetadata_expire=1h" | sudo tee -a /etc/yum.repos.d/vscodium.repo
+                sudo dnf install -y codium
+                """
+            )
+        ),
+        category="Development",
     ),
     "tailscale": App(
         name="Tailscale",
-        description="The Tailscale VPN",
+        description="VPN for simulating LAN",
         payload=Payload(
             Script(
                 """
                 sudo dnf config-manager --add-repo https://pkgs.tailscale.com/stable/fedora/tailscale.repo
                 sudo dnf install -y tailscale
-                sudo systemctl enable tailscaled
+                sudo systemctl enable tailscale
                 """
             )
         ),
-        # category="apps",
+         category="Development",
     ),
     "msedge": App(
         name="Microsoft Edge",
@@ -189,10 +244,500 @@ EOF
                 """
             )
         ),
-        category="apps",
+        category="Browsers",
     ),
+    "geary": App(
+        name="Geary",
+        description="Simple email client",
+        payload=Payload(
+            Script(
+                """
+                flatpak install -y flathub org.gnome.Geary
+                """
+            )
+        ),
+        category="Email Apps",
+    ),
+        "evolution": App(
+        name="Evolution",
+        description="Outlook-style email with calendaring and contacts",
+        payload=Payload(
+            Script(
+                """
+                flatpak install -y flathub org.gnome.Evolution
+                """
+            )
+        ),
+        category="Email Apps",
+    ),
+        "thunderbird": App(
+        name="Thunderbird",
+        description="Open-source email, calendar, and chat tool. Made by the same team as Firefox",
+        payload=Payload(
+            Script(
+                """
+                flatpak install -y flathub org.mozilla.Thunderbird
+                """
+            )
+        ),
+        category="Email Apps",
+    ),
+      "kontact": App(
+        name="Kontact",
+        description="Personal Information Manager for KDE",
+        payload=Payload(
+            Script(
+                """
+                flatpak install -y flathub org.kde.kontact
+                """
+            )
+        ),
+        category="Email Apps",
+    ),
+    "gnome-terminal": App(
+        name="GNOME Terminal",
+        description="Default terminal for GNOME",
+        payload=Payload(
+            Script(
+                """
+                sudo dnf install -y gnome-terminal
+                """
+            )
+        ),
+        category="Terminals",
+    ),
+        "gnome-console": App(
+        name="GNOME Console",
+        description="Responsive terminal for GNOME",
+        payload=Payload(
+            Script(
+                """
+                sudo dnf install -y gnome-console
+                """
+            )
+        ),
+        category="Terminals",
+    ),
+        "konsole": App(
+        name="Konsole",
+        description="Default terminal for KDE",
+        payload=Payload(
+            Script(
+                """
+                sudo dnf install -y konsole
+                """
+            )
+        ),
+        category="Terminals",
+    ),
+        "terminator": App(
+        name="Terminator",
+        description="Tiling terminal",
+        payload=Payload(
+            Script(
+                """
+                sudo dnf install -y terminator
+                """
+            )
+        ),
+        category="Terminals",
+    ),
+            "warp": App(
+        name="Warp",
+        description="Modern terminal with quality of life tweaks and AI features. A favourite of our team. x86 only!",
+        payload=Payload(
+            Script(
+                """
+                sudo tee /etc/yum.repos.d/warpdotdev.repo
+                [warpdotdev]
+                name=warpdotdev
+                baseurl=https://releases.warp.dev/linux/rpm/stable
+                enabled=1
+                gpgcheck=1
+                gpgkey=https://releases.warp.dev/linux/keys/warp.asc
+                sudo dnf install -y warp
+                """
+            )
+        ),
+        category="Terminals",
+    ),
+            "libreoffice": App(
+        name="LibreOffice (Default)",
+        description="Open-source office suite. Compatible with Microsoft Office.",
+        payload=Payload(
+            Script(
+                """
+                echo "LibreOffice already installed :3"
+                """
+            )
+        ),
+        category="Productivity",
+    ),
+            "onlyoffice": App(
+        name="OnlyOffice",
+        description="Office suite designed to replicate Microsoft Office. Includes collaboration features if you host your own server.",
+        payload=Payload(
+            Script(
+                """
+                flatpak install -y flathub org.onlyoffice.desktopeditors
+                """
+            )
+        ),
+        category="Productivity",
+                    ),
+            "notejot": App(
+        name="Notejot",
+        description="Simple notes app, developed by a team member.",
+        payload=Payload(
+            Script(
+                """
+                echo "We love you Lains"
+                flatpak install -y flathub io.github.lainsce.Notejot
+                """
+            )
+        ),
+        category="Productivity",
+                    ),
+           "rnote": App(
+        name="Rnote",
+        description="A team favourite. Handwritten notes and simple drawings.",
+        payload=Payload(
+            Script(
+                """
+                flatpak install -y flathub com.github.flxzt.rnote
+                """
+            )
+        ),
+        category="Productivity",
+                    ),
+           "gimp": App(
+        name="GIMP",
+        description="Photoshop-like image editor.",
+        payload=Payload(
+            Script(
+                """
+                flatpak install -y flathub org.gimp.GIMP
+                """
+            )
+        ),
+        category="Photos and Art",
+                    ),
+           "krita": App(
+        name="Krita",
+        description="Powerful drawing software.",
+        payload=Payload(
+            Script(
+                """
+                flatpak install -y flathub org.kde.krita
+                """
+            )
+        ),
+        category="Photos and Art",
+                    ),
+           "inkscape": App(
+        name="Inkscape",
+        description="Illustrator-style vector editor.",
+        payload=Payload(
+            Script(
+                """
+                flatpak install -y flathub org.inkscape.Inkscape
+                """
+            )
+        ),
+        category="Photos and Art",
+                    ),
+           "wacom": App(
+        name="Wacom Support",
+        description="Support for Wacom tablets and platforms.",
+        payload=Payload(
+            Script(
+                """
+                echo "Already installed :p"
+                """
+            )
+        ),
+        category="Photos and Art",
+                    ),
+           "obs": App(
+        name="OBS Studio",
+        description="Industry standard recording and broadcasting software.",
+        payload=Payload(
+            Script(
+                """
+                flatpak install -y flathub com.obsproject.Studio
+                """
+            )
+        ),
+        category="Video",
+
+                    ),
+           "vlc": App(
+        name="VLC",
+        description="Versatile media player.",
+        payload=Payload(
+            Script(
+                """
+                sudo dnf install -y vlc
+                """
+            )
+        ),
+        category="Video",
+
+                    ),
+           "kdenlive": App(
+        name="Kdenlive",
+        description="Open-source video editor.",
+        payload=Payload(
+            Script(
+                """
+                sudo dnf install -y kdenlive
+                """
+            )
+        ),
+        category="Video",
+           ),
+           "kicad": App(
+        name="KiCad",
+        description="Schematic and circuit board design software.",
+        payload=Payload(
+            Script(
+                """
+                flatpak install -y flathub org.kicad.KiCad
+                """
+            )
+        ),
+        category="Makers",
+           ),
+          "cura": App(
+        name="UltiMaker Cura",
+        description="Slicer for 3D Printing Projects.",
+        payload=Payload(
+            Script(
+                """
+                flatpak install -y flathub com.ultimaker.cura
+                """
+            )
+        ),
+        category="Makers",
+           ),
+          "arduino": App(
+        name="Arduino IDE v2",
+        description="IDE and tools for Arduino (and similar) devices.",
+        payload=Payload(
+            Script(
+                """
+                flatpak install -y flathub cc.arduino.IDE2
+                """
+            )
+        ),
+        category="Makers",
+           ),
+         "rpi-imager": App(
+        name="Raspberry Pi Imager",
+        description="Tool to write OS images for Raspberry Pi.",
+        payload=Payload(
+            Script(
+                """
+                flatpak install -y flathub org.raspberrypi.rpi-imager
+                """
+            )
+        ),
+        category="Makers",
+           ),
+         "vboot-utils": App(
+        name="Depthcharge Utilities",
+        description="Utilities and configuration for ChromeOS' depthcharge.",
+        payload=Payload(
+            Script(
+                """
+                sudo dnf install -y vboot-utils
+                """
+            )
+        ),
+        category="Hardware",
+           ),
+         "adb": App(
+        name="Android Tools",
+        description="Tools for Android and Fastboot debugging.",
+        payload=Payload(
+            Script(
+                """
+                sudo dnf install -y android-tools
+                """
+            )
+        ),
+        category="Hardware",
+           ),
+         "prism-launcher": App(
+        name="Prism Launcher",
+        description="Advanced Minecraft launcher with easy mod support.",
+        payload=Payload(
+            Script(
+                """
+                sudo dnf install -y prism-launcher
+                """
+            )
+        ),
+        category="Gaming",
+           ),
+         "heroic": App(
+        name="Heroic Games Launcher",
+        description="Launcher for the Epic Games Store.",
+        payload=Payload(
+            Script(
+                """
+                flatpak install -y flathub com.heroicgameslauncher.hgl
+                """
+            )
+        ),
+        category="Gaming",
+           ),
+         "minecraft": App(
+        name="Minecraft Launcher",
+        description="The official Minecraft launcher.",
+        payload=Payload(
+            Script(
+                """
+                sudo dmf install -y minecraft-launcher
+                """
+            )
+        ),
+        category="Gaming",
+           ),
+         "discord": App(
+        name="Discord",
+        description="Chat and Voice for Gamers",
+        payload=Payload(
+            Script(
+                """
+                flatpak install -y flathub com.discordapp.Discord
+                """
+            )
+        ),
+        category="Communication",
+           ),
+         "discord-ptb": App(
+        name="Discord PTB",
+        description="Chat and Voice for Gamers",
+        payload=Payload(
+            Script(
+                """
+                sudo yum install -y discord-ptb
+                """
+            )
+        ),
+        category="Communication",
+           ),
+         "discord-canary": App(
+        name="Discord Canary",
+        description="Chat and Voice for Gamers",
+        payload=Payload(
+            Script(
+                """
+                sudo yum install -y discord-canary
+                """
+            )
+        ),
+        category="Communication",
+           ),
+         "armcord": App(
+        name="Armcord",
+        description="Lightweight Discord client",
+        payload=Payload(
+            Script(
+                """
+                sudo yum install -y armcord
+                """
+            )
+        ),
+        category="Communication",
+           ),
+         "vesktop": App(
+        name="Vencord Desktop (Vesktop)",
+        description="Discord with Vencord preinstalled",
+        payload=Payload(
+            Script(
+                """
+                flatpak install -y flathub dev.vencord.Vesktop
+                """
+            )
+        ),
+        category="Communication",
+           ),
+         "element": App(
+        name="Element",
+        description="Official Matrix Client",
+        payload=Payload(
+            Script(
+                """
+                flatpak install -y flathub im.riot.Riot
+                """
+            )
+        ),
+        category="Communication",
+           ),
+         "signal": App(
+        name="Signal Desktop",
+        description="Truly private messaging. Requires a phone! x86 only!",
+        payload=Payload(
+            Script(
+                """
+                flatpak install -y flathub org.signal.Signal
+                """
+            )
+        ),
+        category="Communication",
+           ),
+         "telegram": App(
+        name="Telegram",
+        description="Simple and expressive messaging.",
+        payload=Payload(
+            Script(
+                """
+                flatpak install -y flathub org.telegram.desktop
+                """
+            )
+        ),
+        category="Communication",
+           ),
+         "slack": App(
+        name="Slack",
+        description="Chat for Enterprises.",
+        payload=Payload(
+            Script(
+                """
+                flatpak install -y flathub com.slack.Slack
+                """
+            )
+        ),
+        category="Communication",
+           ),
+         "polari": App(
+        name="Polari",
+        description="IRC Client for GNOME.",
+        payload=Payload(
+            Script(
+                """
+                flatpak install -y flathub org.gnome.Polari
+                """
+            )
+        ),
+        category="Communication",
+           ),
+         "konversation": App(
+        name="Konversation",
+        description="IRC Client for KDE.",
+        payload=Payload(
+            Script(
+                """
+                flatpak install -y flathub org.kde.konversation
+                """
+            )
+        ),
+        category="Communication",
+           ),
     "docker": App(
-        name="Docker (Moby Engine)",
+        name="Docker",
         description="Docker container engine",
         payload=Payload(
             Script(
@@ -202,7 +747,7 @@ EOF
                 """
             )
         ),
-        # category="apps",
+         category="Development",
     ),
     "bottles": App(
         name="Bottles",
@@ -214,7 +759,7 @@ EOF
                 """
             )
         ),
-        category="apps",
+        category="Gaming",
     ),
     "sandbox-tools": App(
         name="Sandboxing Tools",
@@ -238,7 +783,7 @@ EOF
                 """
             )
         ),
-        # category="apps",
+         category="System",
     ),
     "nushell": App(
         name="Nushell",
@@ -250,7 +795,7 @@ EOF
                 """
             )
         ),
-        # category="apps",
+         category="System",
     ),
     "waydroid": App(
         name="Waydroid",
@@ -262,6 +807,7 @@ EOF
                 """
             )
         ),
+         category="System"
     ),
     "flatpak-warehouse": App(
         name="Warehouse",
@@ -359,6 +905,13 @@ category_icons = {
     "drivers": "application-x-firmware-symbolic",
     "apps": "system-software-install",
     "Utilities": "emoji-symbols",
+    "browser": "system-globe-alt2-symbolic",
+    "development": "code-symbolic",
+    "email apps": "mail-symbolic",
+    "gaming": "gamepad2-symbolic,",
+    "Productivity": "open-book-symbolic",
+    "system": "processor-symbolic",
+    "terminals": "terminal-symbolic"
 }
 
 
