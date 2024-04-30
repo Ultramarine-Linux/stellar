@@ -1,9 +1,10 @@
-from contextlib import suppress
-import gi
 import logging
-from . import apps
-from gi.repository import Gtk, Adw
+from contextlib import suppress
 
+import gi
+from gi.repository import Adw, Gtk
+
+from . import apps
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
@@ -26,7 +27,9 @@ class MainWindow(Gtk.ApplicationWindow):
         # don't add controls to headerbar
         # self.header_bar.set_show_close_button(False)
         self.install_button = Gtk.Button(
-            label="Install Selections", css_classes=["suggested-action"], sensitive=False
+            label="Install Selections",
+            css_classes=["suggested-action"],
+            sensitive=False,
         )
         self.install_button.connect("clicked", self.install)
 
@@ -49,9 +52,7 @@ class MainWindow(Gtk.ApplicationWindow):
         # self.sidebar.get_stack()
 
         self.sidebar = Gtk.ListBox(selection_mode=Gtk.SelectionMode.SINGLE)
-        for cat in sorted(
-            set(x.category or "Utilities" for x in apps.apps.values())
-        ):
+        for cat in sorted(set(x.category or "Utilities" for x in apps.apps.values())):
             logging.info(f"Found category {cat}")
             row = Gtk.ListBoxRow(name=cat)
             # set icon for the row too
@@ -74,7 +75,6 @@ class MainWindow(Gtk.ApplicationWindow):
             )
 
             row_box.append(title_label)
-
 
             row.set_child(row_box)
             # make row text align to the left
@@ -153,7 +153,6 @@ class MainWindow(Gtk.ApplicationWindow):
         self.big_box = Adw.NavigationSplitView()
         self.big_box.set_size_request(800, 600)
         # set size limit to 800x600
-        
 
         self.set_child(self.big_box)
         # todo: port to Adw.NavigationSplitView
@@ -267,9 +266,6 @@ def main():
     app = App()
     app.run()
 
-    for app in app_list.values():
-        app.execute()
+    logging.debug(app_list)
 
-
-if __name__ == "__main__":
     main()

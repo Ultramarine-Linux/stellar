@@ -4,6 +4,7 @@ import threading
 # from gi.repository import Gtk, GObject
 # Run payload in either the a chroot as a temporary script, or run directly on the host
 
+
 def execute(payload: str):
     """
     This function accepts a string, and executes it as a script
@@ -40,7 +41,6 @@ def execute(payload: str):
 
         # remove the temporary file
         os.remove(tmpfile)
-        
 
     else:
         print("Running on host...")
@@ -59,7 +59,6 @@ def execute(payload: str):
             f.write(pl)
 
         os.chmod(tmpfile, 0o755)
-
 
         # proc = subprocess.Popen(payload, shell=True)
         # Run script with pkexec
