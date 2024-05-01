@@ -13,11 +13,13 @@ from contextlib import suppress
 from multiprocessing import Process, Queue
 from subprocess import PIPE, Popen
 from threading import Thread
+from types import NoneType
 from typing import IO, Callable, Iterable
 
 from gi.repository import GLib, Gtk
 
-from . import App, Dnf, DnfRm, Flatpak, Payload, Procedure
+# from . import App, Dnf, DnfRm, Flatpak, Payload, Procedure
+from __init__ import App, Dnf, DnfRm, Flatpak, Payload, Procedure
 
 job = mp.Value("i", 0)
 total_jobs = 0
@@ -32,7 +34,12 @@ before_dnf = 0
 dnf_total = 0
 
 
-class InstallProgressWindow(Gtk.ApplicationWindow):
+class InstallProgressApp(Gtk.Application):
+    def do_activate(self):
+        self.window = InstallProgressWindow()
+
+
+class InstallProgressWindow(Gtk.Window):
     lbl = Gtk.Label(label="Test Label")
     progress = Gtk.ProgressBar(hexpand=True)
 
@@ -56,6 +63,7 @@ class InstallProgressWindow(Gtk.ApplicationWindow):
         self.th = Thread(target=self.th_update_progress)
         self.th.daemon = True
         self.th.start()
+        self.present()
 
     def th_update_progress(self):
         while job.value != total_jobs:
@@ -70,20 +78,21 @@ class InstallProgressWindow(Gtk.ApplicationWindow):
     def determine_state(self) -> str:
         global state, job, total_jobs, PROC, SCRIPT, DNFRM, DNFIN, DNFDL, FLATPAK
         match state.value:
-            case PROC:
+            case 1:
                 return f"[{job.value}/{total_jobs}] Running function"
-            case SCRIPT:
+            case 2:
                 return f"[{job.value}/{total_jobs}] Running script"
-            case DNFRM:
+            case 3:
                 return f"[{job.value}/{total_jobs}] Removing packages"
-            case DNFIN:
+            case 4:
                 return f"[{job.value}/{total_jobs}] Installing RPM packages"
-            case DNFDL:
+            case 6:
                 return f"[{job.value}/{total_jobs}] Downloading RPM packages"
-            case FLATPAK:
+            case 5:
                 return f"[{job.value}/{total_jobs}] Installing Flatpak packages"
             case _:
                 logging.warn(f"Unknown state.value: {state.value}")
+                return f"[{job.value}/{total_jobs}] Loading…"
 
 
 def gather[T: Payload](cls: type[T], apps: dict[str, App]) -> list[T]:
@@ -98,12 +107,16 @@ def gather[T: Payload](cls: type[T], apps: dict[str, App]) -> list[T]:
 def process_installs(apps: dict[str, App]):
     global total_jobs
     total_jobs = len(apps) + len(gather(Dnf, apps))
-    p = mp.Process(target=install, args=(apps))
+    p = mp.Process(target=install, args=[apps])
     p.start()
-    gui = InstallProgressWindow()
-    gui.present()
+    gui = InstallProgressApp()
+    gui.run(sys.argv)
+    print("Joining install proc")
+    while p.is_alive():
+        time.sleep(0.01)
     p.join()
-    gui.th.join()
+    print("Joining GUI")
+    gui.window.th.join()
 
 
 def install(apps: dict[str, App]):
@@ -117,14 +130,18 @@ def install(apps: dict[str, App]):
     # I don't really know like… how exactly we should do it, but for now
     # I'll just pray that they are just edge cases…
     # -- mado
-    state.value = DNFRM
-    run_dnf("rm", map(lambda x: x.name, dnfrms))
-    state.value = 0
-    run_dnf("in", map(lambda x: x.name, dnfs))
-    state.value = FLATPAK
-    run_flatpak(map(lambda x: x.name, flatpaks))
-    job.value += len(flatpaks)
+    if any(dnfrms):
+        state.value = DNFRM
+        run_dnf("rm", map(lambda x: x.name, dnfrms))
+    if any(dnfs):
+        state.value = 0
+        run_dnf("in", map(lambda x: x.name, dnfs))
+    if any(flatpaks):
+        state.value = FLATPAK
+        run_flatpak(map(lambda x: x.name, flatpaks))
+        job.value += len(flatpaks)
     run_special_payloads(apps, lambda payload: payload.priority > 0)
+    time.sleep(5)
 
 
 def run_special_payloads(apps: dict[str, App], filter: Callable[[Payload], bool]):
@@ -147,7 +164,7 @@ def run_flatpak(pkgs: Iterable[str]):
     # NOTE: I don't think it's actually possible…?
     run_with_line_parse(
         ["sudo", "flatpak", "install", "--noninteractive", *pkgs],
-        line_parse=lambda _: (),
+        line_parse=lambda _: None,
     )
 
 
@@ -188,7 +205,7 @@ def _just_read(qin: Queue, qres: Queue, fd: IO[bytes]):
 
 # Copied from terrapkg/mkproj
 def run_with_line_parse(
-    cmd: list[str], prefix: str = "┃ ", *, line_parse: Callable[[str]]
+    cmd: list[str], prefix: str = "┃ ", *, line_parse: Callable[[str], NoneType]
 ) -> tuple[int, str, str]:
     # TODO: optimizations?
     print(end=f"\n{prefix}", flush=True)
@@ -233,3 +250,7 @@ def run_with_line_parse(
     th_err.join()
     print()
     return rc, out, err
+
+
+if __name__ == "__main__":
+    process_installs({})
