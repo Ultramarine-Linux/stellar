@@ -12,6 +12,11 @@ gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 
 
+category_descriptions = {
+    "Languages": "For more information regarding IBus and Fcitx5 IMFs, visit The Localization section of Ultramarine Wiki: https://wiki.ultramarine-linux.org/en/usage/l10n/",
+}
+
+
 apps = {
     "nvidia": App(
         name="NVIDIA Drivers",
@@ -451,7 +456,7 @@ EOF""",
             Script(
                 """
                 rpm --import https://downloads.1password.com/linux/keys/1password.asc
-                sh -c 'echo -e "[1password]\nname=1Password Stable Channel\nbaseurl=https://downloads.1password.com/linux/rpm/stable/\$basearch\nenabled=1\ngpgcheck=1\nrepo_gpgcheck=1\ngpgkey=\"https://downloads.1password.com/linux/keys/1password.asc\"" > /etc/yum.repos.d/1password.repo'
+                sh -c 'echo -e "[1password]\nname=1Password Stable Channel\nbaseurl=https://downloads.1password.com/linux/rpm/stable/\\$basearch\nenabled=1\ngpgcheck=1\nrepo_gpgcheck=1\ngpgkey=\"https://downloads.1password.com/linux/keys/1password.asc\"" > /etc/yum.repos.d/1password.repo'
                 """,
                 prio=-10,
             ),
@@ -505,6 +510,98 @@ EOF""",
         option=Option(
             description="Install as flatpak (Removes system Java dependency)"
         ),
+    ),
+    ## Input methods
+    "ibus-rime": App(
+        name="Rime IME for IBus",
+        description="Advanced Chinese IME supporting a wide range of input methods",
+        payloads=[Dnf("ibus-rime")],
+        category="Languages",
+    ),
+    "fcitx5-rime": App(
+        name="Rime IME for Fcitx5",
+        description="Advanced Chinese IME supporting a wide range of input methods",
+        payloads=[Dnf("fcitx5-rime")],
+        category="Languages",
+    ),
+    "ibus-pinyin": App(
+        name="Pinyin IM for ibus",
+        description="The Chinese Pinyin and Bopomofo engines for IBus",
+        payloads=[Dnf("ibus-pinyin")],
+        category="Languages",
+    ),
+    "fcitx5-chinese-addons": App(
+        name="Chinese Addons for fcitx5 (including Pinyin)",
+        description="Pinyin and table input method support for Fcitx5",
+        payloads=[Dnf("fcitx5-chinese-addons")],
+        category="Languages",
+    ),
+    "ibus-chewing": App(
+        name="Chewing IM for IBus",
+        description="Zhuyin Support: Chinese Chewing Engine for IBus",
+        payloads=[Dnf("ibus-chewing")],
+        category="Languages",
+    ),
+    "fcitx5-chewing": App(
+        name="Chewing IM for Fcitx5",
+        description="Zhuyin Support: Chinese Chewing Engine for Fcitx5",
+        payloads=[Dnf("fcitx5-chewing")],
+        category="Languages",
+    ),
+    "ibus-table-chinese": App(
+        name="(Smart)Cangjie/Sucheng IMs for IBus",
+        description="Table-based input method support for IBus",
+        payloads=[Dnf("ibus-table-chinese")],
+        category="Languages",
+    ),
+    "fcitx5-table-extra": App(
+        name="(Smart)Cangjie/Sucheng/Quick/Boshiamy/Zhengma IMs for Fcitx5",
+        description="Extra table-based input method support for Fcitx5",
+        payloads=[Dnf("fcitx5-table-extra")],
+        category="Languages",
+    ),
+    "ibus-wubi": App(
+        name="Wubi IM for IBus",
+        description="Wubi input method support for IBus",
+        payloads=[Dnf("ibus-wubi")],
+        category="Languages",
+    ),
+    # wubi is built into fcitx5
+    "ibus-mozc": App(
+        name="Japanese IME for IBus",
+        description="Japanese Mozc Input Method Editor For IBus",
+        payloads=[Dnf("ibus-mozc")],
+        category="Languages",
+    ),
+    "fcitx5-mozc": App(
+        name="Japanese IME for Fcitx5",
+        description="Japanese Mozc Input Method Editor For Fcitx5",
+        payloads=[Dnf("fcitx5-mozc")],
+        category="Languages",
+    ),
+    "ibus-hangul": App(
+        name="Korean IME for IBus",
+        description="Korean libhangul Input Method Editor for IBus",
+        payloads=[Dnf("ibus-hangul")],
+        category="Languages",
+    ),
+    "fcitx5-hangul": App(
+        name="Korean IME for Fcitx5",
+        description="Korean libhangul Input Method Editor for Fcitx5",
+        payloads=[Dnf("fcitx5-hangul")],
+        category="Languages",
+    ),
+    "ibus-unikey": App(
+        name="Vietnamese IME for IBus",
+        description="Vietnamese unikey Input Method Editor for IBus",
+        payloads=[Dnf("ibus-unikey")],
+        category="Languages",
+    ),
+    "fcitx5-unikey": App(
+        name="Vietnamese IME for Fcitx5",
+        description="Vietnamese unikey Input Method Editor for Fcitx5",
+        payloads=[Dnf("fcitx5-unikey")],
+        category="Languages",
     ),
 }
 

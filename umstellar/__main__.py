@@ -1,13 +1,19 @@
 import logging
+import sys
 from contextlib import suppress
 
 import gi
-from gi.repository import Adw, Gtk
+from gi.repository import Adw, Gdk, Gtk
 
 from . import apps
+from .apps import category_descriptions
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
+
+
+CATEGORY_DESCRIPTION = "Select the components you want to also include in your system"
+
 
 app_list: dict[str, apps.App] = {}
 
@@ -102,12 +108,20 @@ class MainWindow(Gtk.ApplicationWindow):
 
         header_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, margin_bottom=25)
 
-        cta_label = Gtk.Label(css_classes=["h4"])
-        cta_label.set_markup(
-            "Select the components you want to also include in your system"
+        css_provider = Gtk.CssProvider()
+        css_provider.load_from_string(".text-center { text-align: center; }")
+        Gtk.StyleContext.add_provider_for_display(
+            Gdk.Display.get_default(),
+            css_provider,
+            Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION,
         )
 
-        header_box.append(cta_label)
+        # FIXME: how can I center align this
+        self.cta_label = Gtk.Label(css_classes=["h4", "text-center"])
+        self.cta_label.set_xalign(0.5)
+        self.cta_label.set_markup(CATEGORY_DESCRIPTION)
+
+        header_box.append(self.cta_label)
 
         self.box.append(header_box)
 
@@ -170,6 +184,11 @@ class MainWindow(Gtk.ApplicationWindow):
     def on_sidebar_click(self, _: Gtk.ListBox, row: Gtk.ListBoxRow):
         logging.debug("Sidebar moment")
         cat = row.get_name()
+
+        if desc := category_descriptions.get(cat, None):
+            self.cta_label.set_markup(CATEGORY_DESCRIPTION + "\n" + desc)
+        else:
+            self.cta_label.set_markup(CATEGORY_DESCRIPTION)
 
         # clear the listbox
         while child := self.listbox.get_first_child():
@@ -264,8 +283,11 @@ class App(Adw.Application):
 
 def main():
     app = App()
-    app.run()
+    app.run(sys.argv)
+    app.activate()
 
-    logging.debug(app_list)
+    # logging.debug(app_list)
 
+
+if __name__ == "__main__":
     main()
