@@ -21,78 +21,78 @@ from gi.repository import GLib, Gtk
 # from . import App, Dnf, DnfRm, Flatpak, Payload, Procedure
 from __init__ import App, Dnf, DnfRm, Flatpak, Payload, Procedure
 
-job = mp.Value("i", 0)
-total_jobs = 0
-state = mp.Value("i", 0)
-PROC = 1
-SCRIPT = 2
-DNFRM = 3
-DNFIN = 4
-DNFDL = 6
-FLATPAK = 5
-before_dnf = 0
-dnf_total = 0
+# job = mp.Value("i", 0)
+# total_jobs = 0
+# state = mp.Value("i", 0)
+# PROC = 1
+# SCRIPT = 2
+# DNFRM = 3
+# DNFIN = 4
+# DNFDL = 6
+# FLATPAK = 5
+# before_dnf = 0
+# dnf_total = 0
 
 
-class InstallProgressApp(Gtk.Application):
-    def do_activate(self):
-        self.window = InstallProgressWindow()
+# class InstallProgressApp(Gtk.Application):
+#     def do_activate(self):
+#         self.window = InstallProgressWindow()
 
 
-class InstallProgressWindow(Gtk.Window):
-    lbl = Gtk.Label(label="Test Label")
-    progress = Gtk.ProgressBar(hexpand=True)
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.set_default_size(800, 600)
-        # self.header_bar = Adw.HeaderBar()
-        # self.header_bar.set_show_end_title_buttons(False)
-        self.box = Gtk.Box(
-            orientation=Gtk.Orientation.VERTICAL,
-            vexpand=False,
-            hexpand=True,
-            margin_top=25,
-            margin_end=25,
-            margin_start=25,
-            margin_bottom=25,
-        )
-        self.box.append(self.lbl)
-        self.box.append(self.progress)
-        self.set_child(self.box)
-        self.th = Thread(target=self.th_update_progress)
-        self.th.daemon = True
-        self.th.start()
-        self.present()
-
-    def th_update_progress(self):
-        while job.value != total_jobs:
-            GLib.idle_add(self.update_progress, job.value)
-            time.sleep(0.1)
-
-    def update_progress(self, value: float):
-        self.progress.set_fraction(value)
-        self.lbl.set_text(self.determine_state())
-        return False
-
-    def determine_state(self) -> str:
-        global state, job, total_jobs, PROC, SCRIPT, DNFRM, DNFIN, DNFDL, FLATPAK
-        match state.value:
-            case 1:
-                return f"[{job.value}/{total_jobs}] Running function"
-            case 2:
-                return f"[{job.value}/{total_jobs}] Running script"
-            case 3:
-                return f"[{job.value}/{total_jobs}] Removing packages"
-            case 4:
-                return f"[{job.value}/{total_jobs}] Installing RPM packages"
-            case 6:
-                return f"[{job.value}/{total_jobs}] Downloading RPM packages"
-            case 5:
-                return f"[{job.value}/{total_jobs}] Installing Flatpak packages"
-            case _:
-                logging.warn(f"Unknown state.value: {state.value}")
-                return f"[{job.value}/{total_jobs}] Loading…"
+# class InstallProgressWindow(Gtk.Window):
+#     lbl = Gtk.Label(label="Test Label")
+#     progress = Gtk.ProgressBar(hexpand=True)
+#
+#     def __init__(self, *args, **kwargs):
+#         super().__init__(*args, **kwargs)
+#         self.set_default_size(800, 600)
+#         # self.header_bar = Adw.HeaderBar()
+#         # self.header_bar.set_show_end_title_buttons(False)
+#         self.box = Gtk.Box(
+#             orientation=Gtk.Orientation.VERTICAL,
+#             vexpand=False,
+#             hexpand=True,
+#             margin_top=25,
+#             margin_end=25,
+#             margin_start=25,
+#             margin_bottom=25,
+#         )
+#         self.box.append(self.lbl)
+#         self.box.append(self.progress)
+#         self.set_child(self.box)
+#         self.th = Thread(target=self.th_update_progress)
+#         self.th.daemon = True
+#         self.th.start()
+#         self.present()
+#
+#     def th_update_progress(self):
+#         while job.value != total_jobs:
+#             GLib.idle_add(self.update_progress, job.value)
+#             time.sleep(0.1)
+#
+#     def update_progress(self, value: float):
+#         self.progress.set_fraction(value)
+#         self.lbl.set_text(self.determine_state())
+#         return False
+#
+#     def determine_state(self) -> str:
+#         global state, job, total_jobs, PROC, SCRIPT, DNFRM, DNFIN, DNFDL, FLATPAK
+#         match state.value:
+#             case 1:
+#                 return f"[{job.value}/{total_jobs}] Running function"
+#             case 2:
+#                 return f"[{job.value}/{total_jobs}] Running script"
+#             case 3:
+#                 return f"[{job.value}/{total_jobs}] Removing packages"
+#             case 4:
+#                 return f"[{job.value}/{total_jobs}] Installing RPM packages"
+#             case 6:
+#                 return f"[{job.value}/{total_jobs}] Downloading RPM packages"
+#             case 5:
+#                 return f"[{job.value}/{total_jobs}] Installing Flatpak packages"
+#             case _:
+#                 logging.warn(f"Unknown state.value: {state.value}")
+#                 return f"[{job.value}/{total_jobs}] Loading…"
 
 
 def gather[T: Payload](cls: type[T], apps: dict[str, App]) -> list[T]:
@@ -107,20 +107,21 @@ def gather[T: Payload](cls: type[T], apps: dict[str, App]) -> list[T]:
 def process_installs(apps: dict[str, App]):
     global total_jobs
     total_jobs = len(apps) + len(gather(Dnf, apps))
-    p = mp.Process(target=install, args=[apps])
-    p.start()
-    gui = InstallProgressApp()
-    gui.run(sys.argv)
-    print("Joining install proc")
-    while p.is_alive():
-        time.sleep(0.01)
-    p.join()
-    print("Joining GUI")
-    gui.window.th.join()
+    install(apps)
+    # p = mp.Process(target=install, args=[apps])
+    # p.start()
+    # gui = InstallProgressApp()
+    # gui.run(sys.argv)
+    # print("Joining install proc")
+    # while p.is_alive():
+    #     time.sleep(0.01)
+    # p.join()
+    # print("Joining GUI")
+    # gui.window.th.join()
 
 
 def install(apps: dict[str, App]):
-    global job, state
+    # global job, state
     dnfrms = gather(DnfRm, apps)
     dnfs = gather(Dnf, apps)
     flatpaks = gather(Flatpak, apps)
@@ -131,15 +132,15 @@ def install(apps: dict[str, App]):
     # I'll just pray that they are just edge cases…
     # -- mado
     if any(dnfrms):
-        state.value = DNFRM
+        # state.value = DNFRM
         run_dnf("rm", map(lambda x: x.name, dnfrms))
     if any(dnfs):
-        state.value = 0
+        # state.value = 0
         run_dnf("in", map(lambda x: x.name, dnfs))
     if any(flatpaks):
-        state.value = FLATPAK
+        # state.value = FLATPAK
         run_flatpak(map(lambda x: x.name, flatpaks))
-        job.value += len(flatpaks)
+        # job.value += len(flatpaks)
     run_special_payloads(apps, lambda payload: payload.priority > 0)
     time.sleep(5)
 
@@ -148,8 +149,8 @@ def run_special_payloads(apps: dict[str, App], filter: Callable[[Payload], bool]
     payloads = [p for app in apps.values() for p in app.payloads if filter(p)]
     payloads.sort(key=lambda p: p.priority)
     for p in payloads:
-        state.value = PROC if isinstance(p, Procedure) else SCRIPT
-        job.value += 1
+        # state.value = PROC if isinstance(p, Procedure) else SCRIPT
+        # job.value += 1
         p()
 
 
@@ -176,18 +177,18 @@ def _dnf5_line_parse(line: str):
     mid = line.find("/")
     if right == -1 or mid == -1:
         return
-    with suppress(ValueError):
-        if dnf_total != int(line[mid + 1 : right]):
-            # downloading -> installing
-            before_dnf = job.value
-            if state.value == 0:
-                state.value = DNFDL
-            elif state.value == DNFDL:
-                state.value = DNFIN
-            else:
-                # FIXME: I don't know
-                pass
-        job.value = before_dnf + int(line[1:mid])
+    # with suppress(ValueError):
+    #     if dnf_total != int(line[mid + 1 : right]):
+    #         # downloading -> installing
+    #         before_dnf = job.value
+    #         if state.value == 0:
+    #             state.value = DNFDL
+    #         elif state.value == DNFDL:
+    #             state.value = DNFIN
+    #         else:
+    #             # FIXME: I don't know
+    #             pass
+    #     job.value = before_dnf + int(line[1:mid])
 
 
 def _just_read(qin: Queue, qres: Queue, fd: IO[bytes]):
