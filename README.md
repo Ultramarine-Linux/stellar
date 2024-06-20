@@ -1,3 +1,8 @@
+> [!IMPORTANT]
+> Notes for Ultramarine developers: Stellar is ***ONLY*** supposed to be a placeholder quick-start script for Ultramarine Linux. Do ***NOT*** Expect Stellar to be a full OOBE experience!!!
+> It is meant to be discontinued after [Readymade](https://github.com/FyraLabs/readymade) is finalized!!!
+
+
 # Stellar (Stellar)
 
 Stellar is a quick-and-dirty GUI post-install menu for Ultramarine Linux. It's written in Python and uses libadwaita for the UI.
